@@ -1,1 +1,7 @@
 # 50.041-Chord-Project
+
+## Useful Links
+[Chord Original Paper](https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf)  
+[50.041 eDimension](https://edimension.sutd.edu.sg/webapps/blackboard/content/listContent.jsp?course_id=_4766_1&content_id=_163052_1)  
+[Jira Board](https://csheiden.atlassian.net/jira/software/projects/TC/boards/2)  
+[GitHub](https://github.com/jmfan2002/50.041-Chord-Project)  
