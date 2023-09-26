@@ -5,3 +5,4 @@
 [50.041 eDimension](https://edimension.sutd.edu.sg/webapps/blackboard/content/listContent.jsp?course_id=_4766_1&content_id=_163052_1)  
 [Jira Board](https://csheiden.atlassian.net/jira/software/projects/TC/boards/2)  
 [GitHub](https://github.com/jmfan2002/50.041-Chord-Project)  
+[Checkpoint 1](https://docs.google.com/document/d/1egYjJqHyvjDxoG8iJARUEBRDdLf52-gz4wCM5NolD2c/edit)
