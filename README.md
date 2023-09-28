@@ -13,8 +13,8 @@ Install new dependencies and uninstall unused ones
 go mod tidy
 ```
 
-Run server or client
+Run server or entry node
 ```Bash
 go run ServerNode
-go run ClientNode
+go run EntryNode
 ```
