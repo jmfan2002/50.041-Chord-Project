@@ -6,3 +6,9 @@
 [Jira Board](https://csheiden.atlassian.net/jira/software/projects/TC/boards/2)  
 [GitHub](https://github.com/jmfan2002/50.041-Chord-Project)  
 [Checkpoint 1](https://docs.google.com/document/d/1egYjJqHyvjDxoG8iJARUEBRDdLf52-gz4wCM5NolD2c/edit)
+
+## Useful commands
+Install new dependancies and uninstall unused ones
+```Bash
+go mod tidy
+```
