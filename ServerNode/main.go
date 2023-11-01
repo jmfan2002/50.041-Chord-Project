@@ -13,9 +13,10 @@ import (
 
 func main() {
 	port := 4000
+	STORED_NBRS := 4
 
-	nodeInformation := structs.NewNodeInformation(fmt.Sprintf("http://localhost:%d/", port))
-	fmt.Printf("[Debug] set up node with url %s and hash %s\n", nodeInformation.NodeUrl, nodeInformation.NodeHash)
+	nodeInformation := structs.NewNodeInformation(fmt.Sprintf("http://localhost:%d/", port), STORED_NBRS)
+	fmt.Printf("[Debug] set up node %s\n", nodeInformation)
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
