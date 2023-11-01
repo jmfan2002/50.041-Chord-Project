@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -81,6 +82,12 @@ func addData(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// create entrypoint
+	entryServer := EntryPoint{
+		make([]big.Int, 0),
+		make(map[string]string),
+	}
+
 	port := 3000
 
 	// create a new router
