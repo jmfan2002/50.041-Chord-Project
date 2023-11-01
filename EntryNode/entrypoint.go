@@ -2,8 +2,11 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
 )
 
 type SetValueBody struct {
@@ -20,7 +23,7 @@ type EntryPoint struct {
 
 func (entryPoint *EntryPoint) SetValue(key string, val string) {
 	serverAddress := entryPoint.Lookup(key)
-	fmt.Printf("Sending %s to %s\n", key, serverAddress)
+	fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
 
 	/*
 		h := sha256.New()
@@ -42,10 +45,11 @@ func (entryPoint *EntryPoint) SetValue(key string, val string) {
 	*/
 }
 
-func (entryPoint *EntryPoint) GetValue(key string) {
+func (entryPoint *EntryPoint) GetValue(key string) string {
 	serverAddress := entryPoint.Lookup(key)
 	fmt.Printf("Getting %s from %s\n", key, serverAddress)
 
+	return "a"
 	/*
 		h := sha256.New()
 		h.Write([]byte(key))
@@ -99,17 +103,12 @@ func (entryPoint *EntryPoint) AddNode(ipAddress string) {
 
 	fmt.Printf("Added node at %s with hash %x\n", ipAddress, ipHash)
 	fmt.Println("Current node list:")
-	for idx, item := range entryPoint.ipHashes {
-		fmt.Printf("\t%s\n", item.Text(16))
-
-		if idx < len(entryPoint.ipHashes)-1 {
-			zz := entryPoint.ipHashes[idx+1]
-			fmt.Printf("\t %d\n", item.Cmp(&zz))
-		}
+	for _, item := range entryPoint.ipHashes {
+		fmt.Printf("\t%s->%s\n", item.Text(16), entryPoint.servers[item.Text(16)])
 	}
-	fmt.Printf("Current node map: %v\n", entryPoint.servers)
 }
 
+// Finds the insertion index of item in arr
 func binarySearch(arr []big.Int, item *big.Int) int {
 	low := 0
 	high := len(arr) - 1
@@ -126,4 +125,90 @@ func binarySearch(arr []big.Int, item *big.Int) int {
 	}
 
 	return low
+}
+
+// Request handler stuff
+
+func readRequestBody(w http.ResponseWriter, r *http.Request, reqBody any) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("Error reading request body")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.Unmarshal(bodyBytes, reqBody)
+	if err != nil {
+		fmt.Println("Error parsing request body")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func writeSuccessResponse(w http.ResponseWriter, body any) {
+	response, err := json.Marshal(body)
+	if err != nil {
+		fmt.Println("error marshalling data")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}
+
+type AddDataBody struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func (entryPoint *EntryPoint) AddData(w http.ResponseWriter, r *http.Request) {
+	// Get key and value from request
+	var reqBody AddDataBody
+
+	readRequestBody(w, r, &reqBody)
+
+	entryPoint.SetValue(reqBody.Key, reqBody.Value)
+
+	sampleStruct := SampleStruct{
+		Data: "test123",
+	}
+
+	writeSuccessResponse(w, &sampleStruct)
+}
+
+func (entryPoint *EntryPoint) GetData(w http.ResponseWriter, r *http.Request) {
+	// Get key from request
+	queryParams := r.URL.Query()
+
+	key := queryParams.Get("key")
+	val := entryPoint.GetValue(key)
+
+	sampleStruct := SampleStruct{
+		Val:  val,
+		Data: "test123",
+	}
+
+	writeSuccessResponse(w, &sampleStruct)
+}
+
+type JoinReqBody struct {
+	NewNodeAddress string `json:"NewNodeAddress"`
+}
+
+func (entryPoint *EntryPoint) JoinReq(w http.ResponseWriter, r *http.Request) {
+	// Get key and value from request
+	var reqBody JoinReqBody
+
+	readRequestBody(w, r, &reqBody)
+
+	fmt.Println("Receiving join for %s\n", reqBody.NewNodeAddress)
+	entryPoint.AddNode(reqBody.NewNodeAddress)
+
+	sampleStruct := SampleStruct{
+		Data: "test123",
+	}
+
+	writeSuccessResponse(w, &sampleStruct)
 }

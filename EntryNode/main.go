@@ -98,8 +98,10 @@ func main() {
 	// expose endpoints
 	router.HandleFunc("/health", healthCheck).Methods("GET")
 
-	router.HandleFunc("/data", getData).Methods("GET")
-	router.HandleFunc("/data", addData).Methods("POST")
+	router.HandleFunc("/data", entryServer.GetData).Methods("GET")
+	router.HandleFunc("/data", entryServer.AddData).Methods("POST")
+
+	router.HandleFunc("/join", entryServer.JoinReq).Methods("POST")
 
 	// Serve webpage
 	router.HandleFunc("/", indexHandler)
