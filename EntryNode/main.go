@@ -1,10 +1,11 @@
 package main
 
 import (
+	"EntryNode/entrypoint"
+
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/big"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -83,10 +84,7 @@ func addData(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// create entrypoint
-	entryServer := EntryPoint{
-		make([]big.Int, 0),
-		make(map[string]string),
-	}
+	entryServer := entrypoint.New()
 
 	port := 3000
 
@@ -98,10 +96,10 @@ func main() {
 	// expose endpoints
 	router.HandleFunc("/health", healthCheck).Methods("GET")
 
-	router.HandleFunc("/data", entryServer.GetData).Methods("GET")
-	router.HandleFunc("/data", entryServer.AddData).Methods("POST")
+	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
+	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")
 
-	router.HandleFunc("/join", entryServer.JoinReq).Methods("POST")
+	router.HandleFunc("/join", entryServer.AddNode).Methods("POST")
 
 	// Serve webpage
 	router.HandleFunc("/", indexHandler)
