@@ -23,6 +23,9 @@ Start the system:
 ```Bash
 ./start.sh [NUM_SERVERS]
 ```
+Which will make the web frontend available at `localhost:3000`.
+
+For communication between nodes, the entry node is available at `entry_node:3000/path/to/thing` and the server nodes are available at `[ip_address]:4000/path/to/thing`.
 Bring the system down:
 ```Bash
 docker compose -f "./docker-compose.yml" -p chord-network down
