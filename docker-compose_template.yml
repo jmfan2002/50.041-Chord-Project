@@ -5,11 +5,17 @@ services:
     build: ./EntryNode
     ports:
       - "3000:3000"
+    networks:
+      - chord-network
   server_node:
     build: ./ServerNode
-    ports:
-      - PORTS:4000
+    image: server_node
     deploy:
       mode: replicated
       # number of server nodes
       replicas: NUM_SERVERS
+    networks:
+      - chord-network
+
+networks:
+  chord-network:

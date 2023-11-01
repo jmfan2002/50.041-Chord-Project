@@ -25,5 +25,9 @@ Start the system:
 ```
 Bring the system down:
 ```Bash
-docker compose -f "./docker-compose.yml" down
+docker compose -f "./docker-compose.yml" -p chord-network down
+```
+Create a new server node:
+```Bash
+docker run -itd --name [SERVER_NAME] --network chord-network_chord-network server_node
 ```
