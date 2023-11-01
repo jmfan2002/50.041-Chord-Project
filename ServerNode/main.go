@@ -2,7 +2,6 @@ package main
 
 import (
 	"ServerNode/api"
-	"ServerNode/structs"
 
 	"fmt"
 	"log"
@@ -15,15 +14,17 @@ func main() {
 	port := 4000
 	STORED_NBRS := 4
 
-	nodeInformation := structs.NewNodeInformation(fmt.Sprintf("http://localhost:%d/", port), STORED_NBRS)
-	fmt.Printf("[Debug] set up node %s\n", nodeInformation)
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
+	// create a handler that stores and updates our node information
+	handler := api.NewHandler(fmt.Sprintf("http://localhost:%d/", port), STORED_NBRS)
+	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
+
 
 	// expose endpoints
-	router.HandleFunc("/api/health", api.HealthCheck).Methods("GET")
-	router.HandleFunc("/api/cycleHealth/{StartingNodeHash}", api.CycleHealthCheck).Methods("GET")
+	router.HandleFunc("/api/health", handler.HealthCheck).Methods("GET")
+	router.HandleFunc("/api/cycleHealth/{StartingNodeHash}/{FinishedLoop}", handler.CycleHealthCheck).Methods("GET")
 
 	// Catch all undefined endpoints
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
