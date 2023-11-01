@@ -8,5 +8,5 @@ import (
 )
 
 func CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("given nodeHash: %s", mux.Vars(r)["startingNodeHash"])
+	fmt.Printf("given nodeHash: %s", mux.Vars(r)["StartingNodeHash"])
 }

@@ -22,7 +22,7 @@ func main() {
 
 	// expose endpoints
 	router.HandleFunc("/api/health", api.HealthCheck).Methods("GET")
-	router.HandleFunc("/api/cycleHealth/{startingNodeHash}", api.CycleHealthCheck).Methods("GET")
+	router.HandleFunc("/api/cycleHealth/{StartingNodeHash}", api.CycleHealthCheck).Methods("GET")
 
 	// Catch all undefined endpoints
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
