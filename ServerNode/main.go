@@ -11,14 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func setValue(Val string) {
-
-}
-
-func updateFingers() {
-
-}
-
 func main() {
 	port := 4000
 
@@ -29,9 +21,8 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// expose endpoints
-	router.HandleFunc("/health", api.HealthCheck).Methods("GET")
-	router.HandleFunc("/api", api.HealthCheck).Methods("GET", "POST", "PATCH")
-	router.HandleFunc("/api/cycleHealth", api.HealthCheck).Methods("GET")
+	router.HandleFunc("/api/health", api.HealthCheck).Methods("GET")
+	router.HandleFunc("/api/cycleHealth/{startingNodeHash}", api.CycleHealthCheck).Methods("GET")
 
 	// Catch all undefined endpoints
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
