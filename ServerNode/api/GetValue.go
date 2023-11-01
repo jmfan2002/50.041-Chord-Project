@@ -17,7 +17,7 @@ func GetValue(w http.ResponseWriter, r *http.Request, nodeData *structs.NodeInfo
 		return
 	}
 
-	response = []byte(nodeData.NodeValue)
+	response = []byte("[Error] need to get specific value from map")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
