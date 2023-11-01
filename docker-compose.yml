@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  entry_node:
+    build: ./EntryNode
+    ports:
+      - "3000:3000"
+  server_node:
+    build: ./ServerNode
+    ports:
+      - 4000-4003:4000
+    deploy:
+      mode: replicated
+      # number of server nodes
+      replicas: 4
