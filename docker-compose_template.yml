@@ -8,8 +8,8 @@ services:
   server_node:
     build: ./ServerNode
     ports:
-      - 4000-4003:4000
+      - PORTS:4000
     deploy:
       mode: replicated
       # number of server nodes
-      replicas: 4
+      replicas: NUM_SERVERS

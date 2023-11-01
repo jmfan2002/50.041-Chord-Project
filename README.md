@@ -18,3 +18,12 @@ Run server or entry node
 go run ServerNode
 go run EntryNode
 ```
+
+Start the system:
+```Bash
+./start.sh [NUM_SERVERS]
+```
+Bring the system down:
+```Bash
+docker compose -f "./docker-compose.yml" down
+```
