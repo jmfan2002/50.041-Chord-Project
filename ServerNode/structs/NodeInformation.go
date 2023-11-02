@@ -24,8 +24,8 @@ func NewNodeInformation(nodeUrl string, storedNbrs int) *NodeInformation {
 		NodeUrl:          nodeUrl,
 		NodeHash:         hashStr,
 		NodeContents:     make(map[string]string),
-		PredecessorArray: make([]string, 0),
-		SuccessorArray:   make([]string, 0),
+		PredecessorArray: make([]string, 1),
+		SuccessorArray:   make([]string, 1),
 		StoredNbrs:       storedNbrs,
 	}
 }

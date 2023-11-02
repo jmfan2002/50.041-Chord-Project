@@ -114,6 +114,10 @@ type Successors struct {
 	Successors []string
 }
 
+type Succ struct {
+	Succ string `json:"succ"`
+}
+
 func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	h := sha256.New()
 	h.Write([]byte(ipAddress))
@@ -144,6 +148,10 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	}
 
 	// Get predecessor and successor node info, if they exist
+	// Monkey approach: we know what the successor and predecessor should be,
+	// just set things that way
+	// (This won't work once faults are an issue)
+
 	numServers := len(entryPoint.ipHashes)
 
 	if numServers == 1 {
@@ -162,61 +170,73 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	predIp := entryPoint.servers[entryPoint.ipHashes[predIdx].Text(16)]
 	succIp := entryPoint.servers[entryPoint.ipHashes[succIdx].Text(16)]
 
-	var predOfSucc Predecessors
-	var succOfPred Successors
+	j, _ := json.Marshal(Succ{
+		ipAddress,
+	})
+	http.Post(predIp+"/api/succ", "application/json", bytes.NewBuffer(j))
 
-	// get predecessors of the successor node
-	resp, _ := http.Get(succIp + "/api/predecessors")
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading request body")
-		return
-	}
+	j, _ = json.Marshal(Succ{
+		succIp,
+	})
+	http.Post(ipAddress+"/api/succ", "application/json", bytes.NewBuffer(j))
 
-	err = json.Unmarshal(bodyBytes, &predOfSucc)
-	if err != nil {
-		fmt.Println("Error parsing request body")
-		return
-	}
+	/*
+		var predOfSucc Predecessors
+		var succOfPred Successors
 
-	// get predecessors of the successor node
-	resp, _ = http.Get(predIp + "/api/successors")
-	bodyBytes, err = io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading request body")
-		return
-	}
+		// get predecessors of the successor node
+		resp, _ := http.Get(succIp + "/api/predecessors")
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading request body")
+			return
+		}
 
-	err = json.Unmarshal(bodyBytes, &succOfPred)
-	if err != nil {
-		fmt.Println("Error parsing request body")
-		return
-	}
+		err = json.Unmarshal(bodyBytes, &predOfSucc)
+		if err != nil {
+			fmt.Println("Error parsing request body")
+			return
+		}
 
-	// Update new node
-	data, err := json.Marshal(predOfSucc)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	patchRes, err := http.NewRequest(
-		http.MethodPatch, ipAddress+"/api/SetPredecessors",
-		bytes.NewBuffer(data),
-	)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	fmt.Printf(patchRes.Response.Status)
+		// get predecessors of the successor node
+		resp, _ = http.Get(predIp + "/api/successors")
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading request body")
+			return
+		}
 
-	data, err = json.Marshal(succOfPred)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	patchRes, err = http.NewRequest(
-		http.MethodPatch, ipAddress+"/api/SetSuccessors",
-		bytes.NewBuffer(data),
-	)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	fmt.Printf(patchRes.Response.Status)
+		err = json.Unmarshal(bodyBytes, &succOfPred)
+		if err != nil {
+			fmt.Println("Error parsing request body")
+			return
+		}
+
+		// Update new node
+		data, err := json.Marshal(predOfSucc)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		patchRes, err := http.NewRequest(
+			http.MethodPatch, ipAddress+"/api/SetPredecessors",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		fmt.Printf(patchRes.Response.Status)
+
+		data, err = json.Marshal(succOfPred)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		patchRes, err = http.NewRequest(
+			http.MethodPatch, ipAddress+"/api/SetSuccessors",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		fmt.Printf(patchRes.Response.Status)
+	*/
 }
