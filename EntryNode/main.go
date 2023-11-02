@@ -43,46 +43,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "client/index.html")
 }
 
-func getData(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Get data called")
-
-	sampleStruct := SampleStruct{
-		Data: "test123",
-	}
-
-	response, err := json.Marshal(sampleStruct)
-	if err != nil {
-		fmt.Println("error marshalling data")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
-}
-
-func addData(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Add data called")
-
-	// Get data
-
-	sampleStruct := SampleStruct{
-		Message: "Data added",
-	}
-
-	response, err := json.Marshal(sampleStruct)
-	if err != nil {
-		fmt.Println("error marshalling data")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
-}
-
 func main() {
 	// Command line flags
 	portPtr := flag.Int("port", 3000, "The port to serve the entrypoint on")

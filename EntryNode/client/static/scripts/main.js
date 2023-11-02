@@ -4,40 +4,85 @@ async function makeHealthCheck() {
     console.log('Making health check');
 
     // Make the check
-    const response = await fetch('/health', {
-        method: 'GET',
-    });
+    try {
+        const res = await fetch('/health', {
+            method: 'GET',
+        });
 
-    const body = await response.json();
+        if (!res.ok) {
+            outputElem.innerText = `Error: ${res.statusText}`;
+            console.error(res);
+            return;
+        }
 
-    outputElem.innerText = JSON.stringify(body);
-    console.log(body);
+        const body = await res.json();
+
+        outputElem.innerText = JSON.stringify(body);
+        console.log(body);
+    } catch (error) {
+        outputElem.innerText = error;
+        console.error(error);
+    }
 }
 
 async function getData() {
-    console.log('Getting data');
+    const keyInp = document.querySelector('#getPanel > input[name=key]');
+    const key = keyInp.value;
+    console.log('Getting data with key:', key);
 
-    // Make the check
-    const response = await fetch('/data', {
-        method: 'GET',
-    });
+    // Make the get call
+    try {
+        const res = await fetch(`/data?key=${key}`, {
+            method: 'GET',
+        });
 
-    const body = await response.json();
+        if (!res.ok) {
+            outputElem.innerText = `Error: ${res.statusText}`;
+            console.error(res);
+            return;
+        }
 
-    outputElem.innerText = JSON.stringify(body);
-    console.log(body);
+        const body = await res.json();
+        outputElem.innerText = JSON.stringify(body);
+        console.log(body);
+    } catch (error) {
+        outputElem.innerText = error;
+        console.error(error);
+    }
 }
 
 async function addData() {
     console.log('Adding data');
 
-    // Make the check
-    const response = await fetch('/data', {
-        method: 'POST',
-    });
+    const keyInp = document.querySelector('#addPanel > input[name=key]');
+    const valueInp = document.querySelector('#addPanel > input[name=value]');
 
-    const body = await response.json();
+    const data = {
+        key: keyInp.value,
+        value: valueInp.value,
+    };
 
-    outputElem.innerText = JSON.stringify(body);
-    console.log(body);
+    console.log('Data:', data);
+
+    try {
+        const res = await fetch('/data', {
+            method: 'POST',
+            body: data,
+        });
+
+        if (!res.ok) {
+            outputElem.innerText = `Error: ${res.statusText}`;
+            console.error(res);
+            return;
+        }
+
+        const body = await res.json();
+
+        outputElem.innerText = JSON.stringify(body);
+
+        console.log(body);
+    } catch (error) {
+        outputElem.innerText = error;
+        console.error(error);
+    }
 }
