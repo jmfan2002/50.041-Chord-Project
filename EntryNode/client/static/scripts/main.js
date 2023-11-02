@@ -3,25 +3,11 @@ const outputElem = document.getElementById('output');
 async function makeHealthCheck() {
     console.log('Making health check');
 
-    // Make the check
     try {
-        const res = await fetch('/health', {
-            method: 'GET',
-        });
-
-        if (!res.ok) {
-            outputElem.innerText = `Error: ${res.statusText}`;
-            console.error(res);
-            return;
-        }
-
-        const body = await res.json();
-
-        outputElem.innerText = JSON.stringify(body);
-        console.log(body);
+        const response = await fetch('/health', { method: 'GET' });
+        await handleResponse(response);
     } catch (error) {
-        outputElem.innerText = error;
-        console.error(error);
+        handleFetchError(error);
     }
 }
 
@@ -30,24 +16,11 @@ async function getData() {
     const key = keyInp.value;
     console.log('Getting data with key:', key);
 
-    // Make the get call
     try {
-        const res = await fetch(`/data?key=${key}`, {
-            method: 'GET',
-        });
-
-        if (!res.ok) {
-            outputElem.innerText = `Error: ${res.statusText}`;
-            console.error(res);
-            return;
-        }
-
-        const body = await res.json();
-        outputElem.innerText = JSON.stringify(body);
-        console.log(body);
+        const response = await fetch(`/data?key=${key}`, { method: 'GET' });
+        await handleResponse(response);
     } catch (error) {
-        outputElem.innerText = error;
-        console.error(error);
+        handleFetchError(error);
     }
 }
 
@@ -56,7 +29,6 @@ async function addData() {
 
     const keyInp = document.querySelector('#addPanel > input[name=key]');
     const valueInp = document.querySelector('#addPanel > input[name=value]');
-
     const data = {
         key: keyInp.value,
         value: valueInp.value,
@@ -65,24 +37,33 @@ async function addData() {
     console.log('Data:', data);
 
     try {
-        const res = await fetch('/data', {
+        const response = await fetch('/data', {
             method: 'POST',
-            body: data,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
         });
-
-        if (!res.ok) {
-            outputElem.innerText = `Error: ${res.statusText}`;
-            console.error(res);
-            return;
-        }
-
-        const body = await res.json();
-
-        outputElem.innerText = JSON.stringify(body);
-
-        console.log(body);
+        await handleResponse(response);
     } catch (error) {
-        outputElem.innerText = error;
-        console.error(error);
+        handleFetchError(error);
     }
+}
+
+async function handleResponse(res) {
+    if (!res.ok) {
+        const errorMessage = `Error: ${res.statusText}`;
+        outputElem.innerText = errorMessage;
+        console.error(errorMessage);
+    } else {
+        const body = await res.json();
+        outputElem.innerText = JSON.stringify(body);
+        console.log(body);
+    }
+}
+
+// Helper function to handle fetch errors
+function handleFetchError(error) {
+    outputElem.innerText = error;
+    console.error(error);
 }
