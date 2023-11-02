@@ -12,6 +12,7 @@ import (
 )
 
 func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	// Parse variables from url
 	StartingNodeHash := mux.Vars(r)["StartingNodeHash"]
 	FinishedLoop, err := strconv.ParseBool(mux.Vars(r)["FinishedLoop"])
 	if err != nil {
@@ -19,15 +20,17 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	fmt.Printf("given StartingNodeHash: %s, FinishedLoop: %t\n", StartingNodeHash, FinishedLoop)
 
-	// Case: we return an equal or greater node after looping
+	// Case: we reach an equal or greater node from the start after having looped
 	if FinishedLoop && h.NodeInfo.NodeHash >= StartingNodeHash {
 		fmt.Printf("[Debug] Finished the loop\n")
 		w.WriteHeader(http.StatusOK)
 		return
 
 	} else {
-		for i := 0; i < h.NodeInfo.StoredNbrs; i++ {
+		fmt.Printf("[Debug] continuing on the loop\n")
+		for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
 			// Case: we've looped
 			if util.Sha256String(h.NodeInfo.SuccessorArray[i]) <= StartingNodeHash {
 				FinishedLoop = true
@@ -46,5 +49,6 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 			// Otherwise: try the next descendent
 		}
 	}
-	fmt.Printf("given StartingNodeHash: %s, FinishedLoop: %t\n", StartingNodeHash, FinishedLoop)
+
+	w.WriteHeader(http.StatusInternalServerError)
 }
