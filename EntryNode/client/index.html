@@ -5,10 +5,26 @@
     </head>
     <body>
         <h1>Chord Interface</h1>
-        <h2>Make Health check</h2>
-        <button onclick="makeHealthCheck()">Health</button>
-        <button onclick="getData()">Get data</button>
-        <button onclick="addData()">Add data</button>
+        <h2>Menu</h2>
+        <div id="menu">
+            <div>
+                <button onclick="makeHealthCheck()">Health</button>
+            </div>
+            <div id="getPanel">
+                <button onclick="getData()">Get data</button>
+
+                <label for="key">Key:</label>
+                <input type="text" name="key" />
+            </div>
+            <div id="addPanel">
+                <button onclick="addData()">Add data</button>
+                <label for="key">Key:</label>
+                <input type="text" name="key" />
+                <label for="value">Value:</label>
+                <input type="text" name="value" />
+            </div>
+        </div>
+        <h2>Output</h2>
         <p id="output">Output...</p>
         <script src="/static/scripts/main.js"></script>
     </body>

@@ -1,3 +1,26 @@
 body {
   background-color: lightslategray;
+  margin: 4rem;
+}
+
+#menu {
+  display: flex;
+  flex-direction: row;
+
+  gap: 1rem;
+}
+
+#menu > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: ghostwhite;
+  padding: 2rem;
+  border-radius: 0.1rem;
+  box-shadow: 0px 0px 8px 0px #333;
+
+}
+
+button:hover {
+  cursor: pointer;
 }
