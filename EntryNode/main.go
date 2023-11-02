@@ -1,6 +1,9 @@
 package main
 
 import (
+	"EntryNode/entrypoint"
+	"flag"
+
 	"encoding/json"
 	"fmt"
 	"log"
@@ -81,7 +84,14 @@ func addData(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := 3000
+	// Command line flags
+	portPtr := flag.Int("port", 3000, "The port to serve the entrypoint on")
+	flag.Parse()
+
+	port := *portPtr
+
+	// create entrypoint
+	entryServer := entrypoint.New()
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
@@ -91,8 +101,10 @@ func main() {
 	// expose endpoints
 	router.HandleFunc("/health", healthCheck).Methods("GET")
 
-	router.HandleFunc("/data", getData).Methods("GET")
-	router.HandleFunc("/data", addData).Methods("POST")
+	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
+	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")
+
+	router.HandleFunc("/join", entryServer.AddNode).Methods("POST")
 
 	// Serve webpage
 	router.HandleFunc("/", indexHandler)

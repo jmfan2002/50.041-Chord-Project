@@ -1,8 +1,7 @@
 package structs
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"ServerNode/util"
 	"fmt"
 )
 
@@ -19,10 +18,9 @@ func (n NodeInformation) String() string {
 	return fmt.Sprintf("{%s - PredecessorArray: %s, SuccessorArray: %s, StoredNbrs: %d, NodeHash: %s}", n.NodeUrl, n.PredecessorArray, n.SuccessorArray, n.StoredNbrs, n.NodeHash)
 }
 
-func NewNodeInformation(nodeUrl string, storedNbrs int) NodeInformation {
-	hash := sha256.Sum256([]byte(nodeUrl))
-	hashStr := hex.EncodeToString(hash[:])
-	return NodeInformation{
+func NewNodeInformation(nodeUrl string, storedNbrs int) *NodeInformation {
+	hashStr := util.Sha256String(nodeUrl)
+	return &NodeInformation{
 		NodeUrl:          nodeUrl,
 		NodeHash:         hashStr,
 		NodeContents:     make(map[string]string),

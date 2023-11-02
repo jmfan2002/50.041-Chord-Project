@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Health check called")
 
 	sampleStruct := structs.SampleStruct{
