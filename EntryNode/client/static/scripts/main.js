@@ -1,4 +1,7 @@
 const outputElem = document.getElementById('output');
+const keyInput = document.getElementById('key');
+const valInput = document.getElementById('value');
+console.log(keyInput)
 
 async function makeHealthCheck() {
     console.log('Making health check');
@@ -18,7 +21,7 @@ async function getData() {
     console.log('Getting data');
 
     // Make the check
-    const response = await fetch('/data', {
+    const response = await fetch(`/data?key=${keyInput.value}`, {
         method: 'GET',
     });
 
@@ -34,6 +37,10 @@ async function addData() {
     // Make the check
     const response = await fetch('/data', {
         method: 'POST',
+        body: JSON.stringify({
+            key: keyInput.value,
+            value: valInput.value, 
+        })
     });
 
     const body = await response.json();

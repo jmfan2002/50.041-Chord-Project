@@ -20,7 +20,7 @@ func (entryPoint *EntryPoint) AddNode(w http.ResponseWriter, r *http.Request) {
 
 	util.ReadRequestBody(w, r, &reqBody)
 
-	fmt.Println("Receiving join for %s\n", reqBody.NewNodeAddress)
+	fmt.Printf("Receiving join for %s\n", reqBody.NewNodeAddress)
 	entryPoint.addServer(reqBody.NewNodeAddress)
 
 	sampleStruct := JoinResBody{

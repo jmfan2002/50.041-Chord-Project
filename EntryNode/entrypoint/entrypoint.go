@@ -39,11 +39,14 @@ func (entryPoint *EntryPoint) setKVP(key string, val string) {
 	h.Write([]byte(key))
 	b := h.Sum(nil)
 
+	fmt.Printf("Hash: %s\n", hex.EncodeToString(b))
+
 	j, _ := json.Marshal(ChordSetValueReq{
 		hex.EncodeToString(b), val,
 	})
 
-	res, err := http.Post(serverAddress+"/api",
+	res, err := http.Post(
+		serverAddress+"/api",
 		"application/json",
 		bytes.NewBuffer(j),
 	)
@@ -81,15 +84,9 @@ func (entryPoint *EntryPoint) getKVP(key string) string {
 		return ""
 	}
 
-	// Get corresponding value
-	var resBody ChordGetValueRes
-	err = json.Unmarshal(bodyBytes, &resBody)
-	if err != nil {
-		fmt.Println("Error parsing server node request body")
-		return ""
-	}
+	fmt.Println(string(bodyBytes))
 
-	return resBody.NodeContents[hex.EncodeToString(b)]
+	return string(bodyBytes)
 }
 
 // Returns the IP address of the node responsible for the given key
@@ -153,8 +150,17 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 		return
 	}
 
-	predIp := entryPoint.servers[entryPoint.ipHashes[(insertionPoint-1)%numServers].Text(16)]
-	succIp := entryPoint.servers[entryPoint.ipHashes[(insertionPoint+1)%numServers].Text(16)]
+	predIdx := insertionPoint - 1
+	if predIdx < 0 {
+		predIdx += len(entryPoint.servers)
+	}
+	succIdx := insertionPoint + 1
+	if succIdx >= len(entryPoint.servers) {
+		succIdx -= len(entryPoint.servers)
+	}
+
+	predIp := entryPoint.servers[entryPoint.ipHashes[predIdx].Text(16)]
+	succIp := entryPoint.servers[entryPoint.ipHashes[succIdx].Text(16)]
 
 	var predOfSucc Predecessors
 	var succOfPred Successors

@@ -1,4 +1,4 @@
-package util
+package api
 
 import (
 	"encoding/json"
@@ -7,6 +7,30 @@ import (
 	"net/http"
 )
 
+type SetValueReqBody struct {
+	ValueHash string `json:"ValueHash"`
+	Data      string `json:"Data"`
+}
+
+func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
+	// Get key and value from request
+	var reqBody SetValueReqBody
+
+	fmt.Println("Set value called")
+
+	ReadRequestBody(w, r, &reqBody)
+	fmt.Println(reqBody)
+
+	h.NodeInfo.NodeContents[reqBody.ValueHash] = reqBody.Data
+
+	sampleStruct := SetValueReqBody{
+		ValueHash: "",
+		Data:      "",
+	}
+
+	WriteSuccessResponse(w, &sampleStruct)
+}
+
 func ReadRequestBody(w http.ResponseWriter, r *http.Request, reqBody any) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -14,7 +38,6 @@ func ReadRequestBody(w http.ResponseWriter, r *http.Request, reqBody any) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(string(bodyBytes))
 
 	err = json.Unmarshal(bodyBytes, reqBody)
 	if err != nil {
@@ -28,9 +51,11 @@ func WriteSuccessResponse(w http.ResponseWriter, body any) {
 	response, err := json.Marshal(body)
 	if err != nil {
 		fmt.Println("error marshalling data")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }

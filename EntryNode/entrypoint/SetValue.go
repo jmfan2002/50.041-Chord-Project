@@ -2,6 +2,7 @@ package entrypoint
 
 import (
 	"EntryNode/util"
+	"fmt"
 	"net/http"
 )
 
@@ -20,10 +21,12 @@ func (entryPoint *EntryPoint) SetValue(w http.ResponseWriter, r *http.Request) {
 
 	util.ReadRequestBody(w, r, &reqBody)
 
+	fmt.Println(reqBody)
+
 	entryPoint.setKVP(reqBody.Key, reqBody.Value)
 
 	sampleStruct := SetValueResBody{
-		Data: "test123",
+		Data: "Ok",
 	}
 
 	util.WriteSuccessResponse(w, &sampleStruct)
