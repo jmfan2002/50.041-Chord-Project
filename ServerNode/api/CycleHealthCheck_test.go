@@ -6,22 +6,57 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"errors"
+	"io"
+	"bytes"
 
 	"github.com/gorilla/mux"
 )
 
+type MockRequester struct {
+	Response *http.Response
+	Error    error
+}
+
+func (m *MockRequester) SendRequest(requestUrl string, timeoutMs int) (*http.Response, error) {
+	return m.Response, m.Error
+}
+
 func TestCycleHealthCheck(t *testing.T) {
-	handler := api.NewHandler("b", 5)
+	handler := api.NewHandler("", 5)
+	handler.NodeInfo.NodeHash = "b"
+
 	r := mux.NewRouter()
 	r.HandleFunc("/cycleHealth/{StartingNodeHash}/{FinishedLoop}", handler.CycleHealthCheck).Methods("GET")
 
-	// After looping, we reach the original node
-	RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
-	// After looping, we reach past original node
-	RunHttpTest(r, t, "/cycleHealth/c/true", http.StatusOK, ``)
-	// After looping, we haven't reached original
-	RunHttpTest(r, t, "/cycleHealth/a/true", http.StatusOK, ``)
+	t.Run("After looping, we reach the original node. we should return ok", func(t *testing.T) {
+		RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
+	})
 
+	t.Run("After looping, we reach past original node, we should return ok", func(t *testing.T) {
+		handler.NodeInfo.NodeHash = "c"
+		RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
+	})
+
+	t.Run("Loop but don't reach original, call to next node succeeds", func(t *testing.T) {
+		handler.NodeInfo.NodeHash = "a"
+		handler.NodeInfo.SuccessorArray = []string{"b","c"}
+		handler.Requester = &MockRequester{
+			Response: &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString("hello"))},
+			Error:    nil,
+		}
+		RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
+	})
+
+	t.Run("No loop, call to next node times out", func(t *testing.T) {
+		handler.NodeInfo.NodeHash = "a"
+		handler.NodeInfo.SuccessorArray = []string{"b","c"}
+		handler.Requester = &MockRequester{
+			Response: nil,
+			Error: errors.New("timeout"),
+		}
+		RunHttpTest(r, t, "/cycleHealth/b/false", http.StatusInternalServerError, ``)
+	})
 }
 
 // Fails the test if failure, does nothing on pass

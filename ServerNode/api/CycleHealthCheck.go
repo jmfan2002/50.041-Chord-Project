@@ -21,6 +21,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("given StartingNodeHash: %s, FinishedLoop: %t\n", StartingNodeHash, FinishedLoop)
+	fmt.Printf("current node hash: %s\n", h.NodeInfo.NodeHash)
 
 	// Case: we reach an equal or greater node from the start after having looped
 	if FinishedLoop && h.NodeInfo.NodeHash >= StartingNodeHash {
@@ -39,7 +40,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 			// Case: check the next descendant with timeout
 			requestUrl := fmt.Sprintf("%s/%s/%t", h.NodeInfo.SuccessorArray[i], StartingNodeHash, FinishedLoop)
 			fmt.Printf("[Debug] sending request to nbr %d: %s\n", i, requestUrl)
-			resp, err := util.SendRequest(requestUrl, constants.REQUEST_TIMEOUT)
+			resp, err := h.Requester.SendRequest(requestUrl, constants.REQUEST_TIMEOUT)
 			if err == nil {
 				// Case: the node responds
 				w.WriteHeader(resp.StatusCode)

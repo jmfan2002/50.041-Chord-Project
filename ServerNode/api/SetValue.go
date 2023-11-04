@@ -17,7 +17,7 @@ func SetValue(w http.ResponseWriter, r *http.Request, nodeData *structs.NodeInfo
 		return
 	}
 
-	nodeData.NodeContents = response
+	// nodeData.NodeContents = response
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
