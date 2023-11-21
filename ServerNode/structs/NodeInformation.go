@@ -12,6 +12,10 @@ type NodeInformation struct {
 	PredecessorArray []string
 	SuccessorArray   []string
 	StoredNbrs       int
+
+	// Heartbeat information to detect timeouts
+	HeartbeatTarget string
+	HeartbeatSuccessful bool
 }
 
 func (n NodeInformation) String() string {

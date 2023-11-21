@@ -13,6 +13,6 @@ type Handler struct {
 func NewHandler(nodeUrl string, storedNbrs int) *Handler {
 	return &Handler{
 		NodeInfo: structs.NewNodeInformation(nodeUrl, storedNbrs),
-		Requester: &util.BasicRequester{},
+		Requester: &util.HeartbeatRequester{},
 	}
 }
