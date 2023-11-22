@@ -32,9 +32,9 @@ func main() {
 	// create a handler that stores and updates our node information
 	handler := api.NewHandler(fmt.Sprintf("http://10.12.103.97:%d", port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
-	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+1000) % 5000))
-	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+2000) % 5000))
-	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+3000) % 5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+1000) % 5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+2000) % 5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+3000) % 5000))
 
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
