@@ -18,7 +18,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	if StartingNodeHash == "nil" {
 		StartingNodeHash = h.NodeInfo.NodeHash
 	}
-	
+
 	FinishedLoop, err := strconv.ParseBool(mux.Vars(r)["FinishedLoop"])
 	if err != nil {
 		fmt.Printf("[Error] FinishedLoop %s must be a boolean\n", mux.Vars(r)["FinishedLoop"])
@@ -48,23 +48,19 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 			requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s/%t", StartingNodeHash, FinishedLoop)
 			resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, constants.REQUEST_TIMEOUT)
 			
-			if err == nil && resp.StatusCode == http.StatusOK {
-				fmt.Printf("[Debug] received healthCheck response from child!")
-				// Case: the node responds
+			if err != nil {
+				fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
+			
+			} else if resp.StatusCode != http.StatusOK {
+				fmt.Printf("[Debug] next node is reporting break in cycle with status code: %d\n", resp.StatusCode)
 				w.WriteHeader(resp.StatusCode)
 				return
 			
 			} else {
-				fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
-				if (err != nil) {
-					fmt.Printf("[Debug] error: %s\n", err.Error())
-				}
-				if (resp != nil) {
-					fmt.Printf("[Debug] status code: %d\n", resp.StatusCode)
-				}
+				fmt.Printf("[Debug] received healthCheck response from child!\n")
+				w.WriteHeader(resp.StatusCode)
+				return
 			}
-
-			// Otherwise: try the next descendent
 		}
 	}
 
