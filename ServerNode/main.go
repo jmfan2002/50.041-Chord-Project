@@ -41,7 +41,11 @@ func main() {
 
 	// expose endpoints
 	router.HandleFunc("/api/health", handler.HealthCheck).Methods("GET")
-	router.HandleFunc("/api/cycleHealth/{StartingNodeHash}/{FinishedLoop}", handler.CycleHealthCheck).Methods("GET")
+	router.HandleFunc("/api/cycleHealth/{StartingNodeHash}/", handler.CycleHealthCheck).Methods("GET")
+	// router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("PATCH")
+	// router.HandleFunc("/api/successors", handler.UpdateSuccessors).Methods("PATCH")
+
+	// Internal endpoints
 
 	// Catch all undefined endpoints
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
