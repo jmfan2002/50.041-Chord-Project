@@ -42,38 +42,46 @@ func (r *HeartbeatRequester) SendRequest(baseUrl, endpoint, httpMethod string, t
 
 	
 	// Send health checks at interval of timeoutMs in a goroutine to allow us to progress to main request
-	ticker := time.NewTicker(time.Duration(timeoutMs) * time.Millisecond)
-	defer ticker.Stop()
 	go func() {
+		fmt.Printf("[Htbt] starting heartbeat checks\n")
+		ticker := time.NewTicker(time.Duration(timeoutMs) * time.Millisecond)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
+				if ctx.Err() != nil {
+					fmt.Println("[Htbt] Heartbeat cancelled")
+					return
+				}
+
 				client := http.Client {
 					Timeout: time.Duration(timeoutMs) * time.Millisecond,
 				}
 
-				resp, err := client.Get(baseUrl + "/api/health")
-				if err != nil || resp.StatusCode != http.StatusOK {
-					fmt.Println("[Warning] Health check failed, canceling the request")
+				healthResp, healthErr := client.Get(baseUrl + "/api/health")
+				if healthErr != nil || healthResp.StatusCode != http.StatusOK {
+					fmt.Printf("[Htbt] Health check failed, canceling the request. err: %s\n", healthErr)
 					cancel()
 					return
 				} else {
-					fmt.Println("[Debug] heartbeat health check successful!")
+					fmt.Println("[Htbt] heartbeat health check successful!")
 				}
+
+
 			case <-ctx.Done():
-				// If the context is done, stop the health checks
+				// If the context is done, stop the checks
+				fmt.Printf("[Htbt] stopping heartbeat checks\n")
 				return
 			}
 		}
 	}()
 
 	// Send the main request, cancelled with the cancel() method
-	fmt.Printf("[Debug] Request start\n")
+	// fmt.Printf("[Debug] Request start\n")
 	resp, err := http.DefaultClient.Do(req)
-	fmt.Printf("[Debug] Request finish\n")
+	// fmt.Printf("[Debug] Request finish\n")
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("[Warning] failed to send request: %s", err))
 	}
-	fmt.Println("[Debug] Successfully received response!")
 	return resp, nil
 }

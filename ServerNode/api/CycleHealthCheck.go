@@ -5,7 +5,6 @@ import (
 	"ServerNode/util"
 	"fmt"
 	"net/http"
-	"time"
 
 	"strconv"
 
@@ -13,8 +12,13 @@ import (
 )
 
 func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("[Debug] CycleHealthCheck called\n")
 	// Parse variables from url
 	StartingNodeHash := mux.Vars(r)["StartingNodeHash"]
+	if StartingNodeHash == "nil" {
+		StartingNodeHash = h.NodeInfo.NodeHash
+	}
+	
 	FinishedLoop, err := strconv.ParseBool(mux.Vars(r)["FinishedLoop"])
 	if err != nil {
 		fmt.Printf("[Error] FinishedLoop %s must be a boolean\n", mux.Vars(r)["FinishedLoop"])
@@ -36,24 +40,34 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("[Debug] sending msg to %s\n",h.NodeInfo.SuccessorArray[i])
 			// Case: we've looped
 			if util.Sha256String(h.NodeInfo.SuccessorArray[i]) <= StartingNodeHash {
+				fmt.Printf("[Debug] setting finishedLoop to true, next node hash of %s <= starting hash of %s\n", util.Sha256String(h.NodeInfo.SuccessorArray[i]), StartingNodeHash)
 				FinishedLoop = true
 			}
 
 			// Case: check the next descendant with timeout
-			requestEndpoint := fmt.Sprintf("/%s/%t", StartingNodeHash, FinishedLoop)
+			requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s/%t", StartingNodeHash, FinishedLoop)
 			resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, constants.REQUEST_TIMEOUT)
-			time.Sleep(5 * time.Second)	// DEBUG test heartbeat
-			if err == nil {
-				fmt.Printf("[Debug], received healthCheck response from child!")
+			
+			if err == nil && resp.StatusCode == http.StatusOK {
+				fmt.Printf("[Debug] received healthCheck response from child!")
 				// Case: the node responds
 				w.WriteHeader(resp.StatusCode)
 				return
+			
+			} else {
+				fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
+				if (err != nil) {
+					fmt.Printf("[Debug] error: %s\n", err.Error())
+				}
+				if (resp != nil) {
+					fmt.Printf("[Debug] status code: %d\n", resp.StatusCode)
+				}
 			}
 
 			// Otherwise: try the next descendent
 		}
 	}
 
-	fmt.Printf("[Error] all descendants have failed\n")
+	fmt.Printf("[Error] all descendants have failed for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
 	w.WriteHeader(http.StatusInternalServerError)
 }

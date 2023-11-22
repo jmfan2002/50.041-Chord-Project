@@ -24,6 +24,8 @@ func (n NodeInformation) String() string {
 
 func NewNodeInformation(nodeUrl string, storedNbrs int) *NodeInformation {
 	hashStr := util.Sha256String(nodeUrl)
+	// TODO: remove after testing!!!!
+	hashStr = nodeUrl // GET RID OF THIS 
 	return &NodeInformation{
 		NodeUrl:          nodeUrl,
 		NodeHash:         hashStr,

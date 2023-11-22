@@ -27,15 +27,15 @@ func TestCycleHealthCheck(t *testing.T) {
 	handler.NodeInfo.NodeHash = "b"
 
 	r := mux.NewRouter()
-	r.HandleFunc("/cycleHealth/{StartingNodeHash}/{FinishedLoop}", handler.CycleHealthCheck).Methods("GET")
+	r.HandleFunc("/api/cycleHealth/{StartingNodeHash}/{FinishedLoop}", handler.CycleHealthCheck).Methods("GET")
 
 	t.Run("After looping, we reach the original node. we should return ok", func(t *testing.T) {
-		RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, ``)
 	})
 
 	t.Run("After looping, we reach past original node, we should return ok", func(t *testing.T) {
 		handler.NodeInfo.NodeHash = "c"
-		RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, ``)
 	})
 
 	t.Run("Loop but don't reach original, call to next node succeeds", func(t *testing.T) {
@@ -45,7 +45,7 @@ func TestCycleHealthCheck(t *testing.T) {
 			Response: &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString("hello"))},
 			Error:    nil,
 		}
-		RunHttpTest(r, t, "/cycleHealth/b/true", http.StatusOK, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, ``)
 	})
 
 	t.Run("No loop, call to next node times out", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestCycleHealthCheck(t *testing.T) {
 			Response: nil,
 			Error: errors.New("timeout"),
 		}
-		RunHttpTest(r, t, "/cycleHealth/b/false", http.StatusInternalServerError, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/false", http.StatusInternalServerError, ``)
 	})
 }
 
