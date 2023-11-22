@@ -44,7 +44,8 @@ func main() {
 	// expose endpoints
 	router.HandleFunc("/api/health", handler.HealthCheck).Methods("GET")
 	router.HandleFunc("/api/cycleHealth/{PreviousNodeHash}/", handler.CycleHealthCheck).Methods("GET")
-	// router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
+	router.HandleFunc("/api/successors", handler.SetSuccessors).Methods("POST")
+	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 
 	// Internal endpoints

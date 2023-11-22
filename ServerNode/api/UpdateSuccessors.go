@@ -2,6 +2,7 @@ package api
 
 import (
 	"ServerNode/constants"
+	"ServerNode/structs"
 	"ServerNode/util"
 	"fmt"
 	"net/http"
@@ -9,10 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 )
-
-type UpdateSuccessorsResponse struct {
-	Successors []string
-}
 
 func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[Debug] UpdateSuccessors called\n")
@@ -30,7 +27,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 	// We've fully overlapped, return -------------------------------------------
 	if CurrentOverlap == h.NodeInfo.StoredNbrs-1 {
 		fmt.Printf("[Debug] overlap complete, returning! \n")
-		util.WriteResponse(w, UpdateSuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
+		util.WriteResponse(w, structs.SuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
 		return
 	}
 
@@ -69,8 +66,8 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			// Descendent responds ok, process response
-			var updateResp = &UpdateSuccessorsResponse{}
-			err := util.ReadResponseBody(resp, updateResp)
+			var updateResp = &structs.SuccessorsResponse{}
+			err := util.ReadBody(resp.Body, updateResp)
 			// time.Sleep(1 * time.Second)
 
 			if err != nil {

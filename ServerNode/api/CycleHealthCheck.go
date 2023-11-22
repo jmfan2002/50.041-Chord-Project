@@ -50,7 +50,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// Descendent responds ok, pass response forward
 			var healthResp = &CycleHealthResponse{}
-			err := util.ReadResponseBody(resp, healthResp)
+			err := util.ReadBody(resp.Body, healthResp)
 			// time.Sleep(1 * time.Second)
 
 			if err != nil {
