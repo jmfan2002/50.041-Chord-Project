@@ -27,8 +27,8 @@ func New() *EntryPoint {
 }
 
 type ChordSetValueReq struct {
-	ValueHash string
-	Data      string
+	ValueHash string `json:"ValueHash"`
+	Data      string `json:"Data"`
 }
 
 func (entryPoint *EntryPoint) setKVP(key string, val string) {
@@ -39,9 +39,13 @@ func (entryPoint *EntryPoint) setKVP(key string, val string) {
 	h.Write([]byte(key))
 	b := h.Sum(nil)
 
-	j, _ := json.Marshal(ChordSetValueReq{
+	j, err := json.Marshal(ChordSetValueReq{
 		hex.EncodeToString(b), val,
 	})
+	if err != nil {
+		fmt.Println("Error creating request body")
+		return
+	}
 
 	res, err := http.Post(serverAddress+"/api",
 		"application/json",
@@ -81,15 +85,7 @@ func (entryPoint *EntryPoint) getKVP(key string) string {
 		return ""
 	}
 
-	// Get corresponding value
-	var resBody ChordGetValueRes
-	err = json.Unmarshal(bodyBytes, &resBody)
-	if err != nil {
-		fmt.Println("Error parsing server node request body")
-		return ""
-	}
-
-	return resBody.NodeContents[hex.EncodeToString(b)]
+	return string(bodyBytes)
 }
 
 // Returns the IP address of the node responsible for the given key
@@ -146,71 +142,154 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 		fmt.Printf("\t%s->%s\n", item.Text(16), entryPoint.servers[item.Text(16)])
 	}
 
-	// Get predecessor and successor node info, if they exist
 	numServers := len(entryPoint.ipHashes)
 
+	// If first server, set successors list to self
 	if numServers == 1 {
+		data, _ := json.Marshal(Successors{
+			Successors: []string{ipAddress},
+		})
+		_, _ = http.Post(
+			ipAddress+"/api/successors",
+			"application/json",
+			bytes.NewBuffer(data),
+		)
+
 		return
 	}
 
-	predIp := entryPoint.servers[entryPoint.ipHashes[(insertionPoint-1)%numServers].Text(16)]
-	succIp := entryPoint.servers[entryPoint.ipHashes[(insertionPoint+1)%numServers].Text(16)]
+	// Node join
+	// Try to find the predecessor to the new node, and use it to inform the new node.
+	predIndex := insertionPoint
 
-	var predOfSucc Predecessors
-	var succOfPred Successors
+	for predIndex != (insertionPoint+1+numServers)%numServers {
+		predIndex = (predIndex - 1 + numServers) % numServers
+		fmt.Printf("trying to contact at %d\n", predIndex)
 
-	// get predecessors of the successor node
-	resp, _ := http.Get(succIp + "/api/predecessors")
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading request body")
-		return
+		// 1. get the successors (GetSuccessors) of the node before where it belongs
+		fmt.Println("Step 1")
+		var succOfPred Successors
+		predIp := entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)]
+		// get successors of the preceding node
+		resp, err := http.Get(predIp + "/api/successors")
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading request body")
+			return
+		}
+		err = json.Unmarshal(bodyBytes, &succOfPred)
+
+		// 2. set the successors of the new node to this list (SetSuccessors)
+		fmt.Println("Step 2")
+		data, err := json.Marshal(succOfPred)
+		resp, err = http.Post(
+			ipAddress+"/api/successors",
+			"application/json",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		// 3. set the successors of the old node to [newNode, oldSuccessors...]
+		fmt.Println("Step 3")
+		succOfPred.Successors = append([]string{ipAddress}, succOfPred.Successors...)
+		data, err = json.Marshal(succOfPred)
+		resp, err = http.Post(
+			predIp+"/api/successors",
+			"application/json",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		// 4. call UpdateSuccessors on any node in the system (it will be safest to call it on the node directly before, but it doesn't really matter)
+		fmt.Println("Step 4")
+		_, err = http.NewRequest(
+			http.MethodPatch,
+			predIp+"/api/successors/nil/0",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 	}
 
-	err = json.Unmarshal(bodyBytes, &predOfSucc)
-	if err != nil {
-		fmt.Println("Error parsing request body")
-		return
-	}
+	// TODO: delete the stuff below
 
-	// get predecessors of the successor node
-	resp, _ = http.Get(predIp + "/api/successors")
-	bodyBytes, err = io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading request body")
-		return
-	}
+	// Get predecessor and successor node info, if they exist
 
-	err = json.Unmarshal(bodyBytes, &succOfPred)
-	if err != nil {
-		fmt.Println("Error parsing request body")
-		return
-	}
+	/*
+		if numServers == 1 {
+			return
+		}
 
-	// Update new node
-	data, err := json.Marshal(predOfSucc)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	patchRes, err := http.NewRequest(
-		http.MethodPatch, ipAddress+"/api/SetPredecessors",
-		bytes.NewBuffer(data),
-	)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	fmt.Printf(patchRes.Response.Status)
+		succIp := entryPoint.servers[entryPoint.ipHashes[(insertionPoint+1)%numServers].Text(16)]
 
-	data, err = json.Marshal(succOfPred)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	patchRes, err = http.NewRequest(
-		http.MethodPatch, ipAddress+"/api/SetSuccessors",
-		bytes.NewBuffer(data),
-	)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	fmt.Printf(patchRes.Response.Status)
+		var predOfSucc Predecessors
+		var succOfPred Successors
+
+		// get predecessors of the successor node
+		resp, _ := http.Get(succIp + "/api/predecessors")
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading request body")
+			return
+		}
+
+		err = json.Unmarshal(bodyBytes, &predOfSucc)
+		if err != nil {
+			fmt.Println("Error parsing request body")
+			return
+		}
+
+		// get predecessors of the successor node
+		resp, _ = http.Get(predIp + "/api/successors")
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading request body")
+			return
+		}
+
+		err = json.Unmarshal(bodyBytes, &succOfPred)
+		if err != nil {
+			fmt.Println("Error parsing request body")
+			return
+		}
+
+		// Update new node
+		data, err := json.Marshal(predOfSucc)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		patchRes, err := http.NewRequest(
+			http.MethodPatch, ipAddress+"/api/SetPredecessors",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		fmt.Printf(patchRes.Response.Status)
+
+		data, err = json.Marshal(succOfPred)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		patchRes, err = http.NewRequest(
+			http.MethodPatch, ipAddress+"/api/SetSuccessors",
+			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		fmt.Printf(patchRes.Response.Status)
+	*/
 }

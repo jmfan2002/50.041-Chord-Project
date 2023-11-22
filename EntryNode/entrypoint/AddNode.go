@@ -28,4 +28,6 @@ func (entryPoint *EntryPoint) AddNode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	util.WriteSuccessResponse(w, &sampleStruct)
+
+	fmt.Println("Ending join")
 }

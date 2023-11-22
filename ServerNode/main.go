@@ -2,7 +2,11 @@ package main
 
 import (
 	"ServerNode/api"
+	"ServerNode/structs"
+	"bytes"
+	"encoding/json"
 	"strconv"
+	"time"
 
 	"fmt"
 	"log"
@@ -34,10 +38,9 @@ func main() {
 	handler := api.NewHandler(fmt.Sprintf("http://%s:%d", BASE_URL, port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
 	handler.NodeInfo.NodeHash = fmt.Sprintf("%d", port) // DEBUG: REMOVE WHEN DONE
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000) % 5000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000) % 5000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000) % 5000))
-
+	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%5000))
+	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%5000))
+	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%5000))
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
@@ -48,6 +51,9 @@ func main() {
 	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 
+	router.HandleFunc("/api/{ValueHash}", handler.GetValue).Methods("GET")
+	router.HandleFunc("/api", handler.SetValue).Methods("POST")
+
 	// Internal endpoints
 
 	// Catch all undefined endpoints
@@ -57,6 +63,24 @@ func main() {
 	})
 
 	// start service
+	// log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
+	// ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+
+	j, _ := json.Marshal(structs.JoinReq{
+		fmt.Sprintf("http://localhost:%d", port),
+	})
+	entry := "127.0.0.1:3000"
+
 	fmt.Printf("Listening on port %d\n", port)
+	go func() {
+		fmt.Println("[Debug]")
+		time.Sleep(1 * time.Second)
+		fmt.Println("Waking up, notifying entry point")
+		http.Post("http://"+entry+"/join", "application/json",
+			bytes.NewBuffer(j))
+		fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
+	}()
+	// log.Fatal(http.Serve(ln, router))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
+
 }

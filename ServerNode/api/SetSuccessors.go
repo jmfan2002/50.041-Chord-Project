@@ -10,7 +10,7 @@ import (
 func (h *Handler) SetSuccessors(w http.ResponseWriter, r *http.Request) {
 	var newSuccessors = &structs.SuccessorsResponse{}
 	err := util.ReadBody(r.Body, &newSuccessors)
-	if (err != nil) {
+	if err != nil {
 		fmt.Printf("[ERROR] failed to read request: %s\n", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
