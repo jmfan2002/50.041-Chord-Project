@@ -10,72 +10,89 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type UpdateSuccessorsResponse struct {
+	Successors []string
+}
+
 func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[Debug] CycleHealthCheck called\n")
+	fmt.Printf("[Debug] UpdateSuccessors called\n")
 
 	// Parse variables from url -------------------------------------------
-	StartingNodeHash := mux.Vars(r)["StartingNodeHash"]
-	if StartingNodeHash == "nil" {
-		StartingNodeHash = h.NodeInfo.NodeHash
-	}
+	PreviousNodeHash := mux.Vars(r)["PreviousNodeHash"]
 
-	FinishedLoop, err := strconv.ParseBool(mux.Vars(r)["FinishedLoop"])
+	CurrentOverlap, err := strconv.Atoi(mux.Vars(r)["CurrentOverlap"])
 	if err != nil {
-		fmt.Printf("[Error] FinishedLoop %s must be a boolean\n", mux.Vars(r)["FinishedLoop"])
-		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Printf("[ERROR] cannot convert CurrentOverlap to string: %s", mux.Vars(r)["CurrentOverlap"])
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("[Debug] given StartingNodeHash: %s, FinishedLoop: %t\n", StartingNodeHash, FinishedLoop)
-	fmt.Printf("[Debug] current node hash: %s\n", h.NodeInfo.NodeHash)
 
-	// We've cycled back, return -------------------------------------------
-	if FinishedLoop && h.NodeInfo.NodeHash >= StartingNodeHash {
-		fmt.Printf("[Debug] cycle complete, returning!\n")
-		util.WriteResponse(w, CycleHealthResponse{CycleSize: 1}, http.StatusOK)
+	// We've fully overlapped, return -------------------------------------------
+	if CurrentOverlap == h.NodeInfo.StoredNbrs-1 {
+		fmt.Printf("[Debug] overlap complete, returning! \n")
+		util.WriteResponse(w, UpdateSuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
 		return
+	}
 
-		// Continue the cycle -------------------------------------------
-	} else {
-		fmt.Printf("[Debug] continuing on the loop\n")
-		for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
-			fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
+	// Continue on overlap -------------------------------------------
+	if CurrentOverlap > 0 {
+		CurrentOverlap++
+	}
 
-			// Case: we've looped
-			if util.Sha256String(h.NodeInfo.SuccessorArray[i]) <= StartingNodeHash {
-				fmt.Printf("[Debug] setting finishedLoop to true, next node hash of %s <= starting hash of %s\n", util.Sha256String(h.NodeInfo.SuccessorArray[i]), StartingNodeHash)
-				FinishedLoop = true
-			}
+	// We've cycled back, start on overlap -------------------------------------------
+	if PreviousNodeHash != "nil" && CurrentOverlap == 0 && h.NodeInfo.NodeHash <= PreviousNodeHash {
+		fmt.Printf("[Debug] cycle complete, starting on overlap \n")
+		CurrentOverlap++
+	}
 
-			// Check the next descendant
-			requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s/%t", StartingNodeHash, FinishedLoop)
-			resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, constants.REQUEST_TIMEOUT)
+	if CurrentOverlap == 0 {
+		fmt.Printf("[Debug] successor array starts as: %s\n", h.NodeInfo.SuccessorArray)
+	}
+
+	// Check descendants -------------------------------------------
+	for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
+		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
+
+		// Request next descendent
+		requestEndpoint := fmt.Sprintf("/api/successors/%s/%d", h.NodeInfo.NodeHash, CurrentOverlap)
+		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPatch, constants.REQUEST_TIMEOUT)
+
+		if err != nil {
+			// Descendent is unresponsive
+			fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
+
+		} else if resp.StatusCode != http.StatusOK {
+			// Descendent returns a bad status code, return
+			fmt.Printf("[Debug] next node is reporting break in cycle with status code: %d\n", resp.StatusCode)
+			w.WriteHeader(resp.StatusCode)
+			return
+
+		} else {
+			// Descendent responds ok, process response
+			var updateResp = &UpdateSuccessorsResponse{}
+			err := util.ReadResponseBody(resp, updateResp)
+			// time.Sleep(1 * time.Second)
 
 			if err != nil {
-				// Descendent is unresponsive
-				fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
-
-			} else if resp.StatusCode != http.StatusOK {
-				// Descendent returns a bad status code, return
-				fmt.Printf("[Debug] next node is reporting break in cycle with status code: %d\n", resp.StatusCode)
-				w.WriteHeader(resp.StatusCode)
-				return
-
-			} else {
-				// Descendent responds ok, pass response forward
-				var healthResp = &CycleHealthResponse{}
-				err := util.ReadResponseBody(resp, healthResp)
-
-				if err != nil {
-					fmt.Printf("[Error] failed to decode response body: %s\n", err.Error())
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-
-				healthResp.CycleSize++
-				fmt.Printf("[Debug] received healthCheck response from child! nodes: %d\n", healthResp.CycleSize)
-				util.WriteResponse(w, healthResp, http.StatusOK)
+				fmt.Printf("[Error] failed to decode response body: %s\n", err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
+
+			// If it's not an overlap, update array
+			if CurrentOverlap == 0 {
+				h.NodeInfo.SuccessorArray = util.CopySliceString(updateResp.Successors)
+				fmt.Printf("[Debug] successor array is now: %s\n", h.NodeInfo.SuccessorArray)
+			}
+
+			// Regardless, return array of current node and previous k - 1
+			updateResp.Successors = append([]string{h.NodeInfo.NodeUrl}, updateResp.Successors...)
+			if CurrentOverlap == 0 {
+				updateResp.Successors = updateResp.Successors[:len(updateResp.Successors)-1]
+			}
+			fmt.Printf("[Debug] returning successor array: %s\n", updateResp.Successors)
+			util.WriteResponse(w, updateResp, http.StatusOK)
+			return
 		}
 	}
 

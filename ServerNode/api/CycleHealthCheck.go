@@ -17,20 +17,15 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[Debug] CycleHealthCheck called\n")
 
 	// Parse variables from url -------------------------------------------
-	StartingNodeHash := mux.Vars(r)["StartingNodeHash"]
-	fmt.Printf("[Debug] given StartingNodeHash: %s\n", StartingNodeHash)
+	PreviousNodeHash := mux.Vars(r)["PreviousNodeHash"]
+	fmt.Printf("[Debug] given PreviousNodeHash: %s\n", PreviousNodeHash)
 	fmt.Printf("[Debug] current node hash: %s\n", h.NodeInfo.NodeHash)
 
 	// We've cycled back, return -------------------------------------------
-	if StartingNodeHash != "nil" && h.NodeInfo.NodeHash >= StartingNodeHash {
-		fmt.Printf("[Debug] cycle complete, returning!\n")
-		util.WriteResponse(w, CycleHealthResponse{CycleSize: 1}, http.StatusOK)
+	if PreviousNodeHash != "nil" && h.NodeInfo.NodeHash <= PreviousNodeHash {
+		fmt.Printf("[Debug] cycle complete, current hash is less than previous hash! \n")
+		util.WriteResponse(w, CycleHealthResponse{CycleSize: 0}, http.StatusOK)
 		return
-	}
-
-	// If this was the first node, we don't want to compare until now
-	if StartingNodeHash == "nil" {
-		StartingNodeHash = h.NodeInfo.NodeHash
 	}
 
 	// Continue the cycle -------------------------------------------
@@ -39,7 +34,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Check the next descendant
-		requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s", StartingNodeHash)
+		requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s", h.NodeInfo.NodeHash)
 		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
@@ -56,6 +51,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 			// Descendent responds ok, pass response forward
 			var healthResp = &CycleHealthResponse{}
 			err := util.ReadResponseBody(resp, healthResp)
+			// time.Sleep(1 * time.Second)
 
 			if err != nil {
 				fmt.Printf("[Error] failed to decode response body: %s\n", err.Error())

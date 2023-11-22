@@ -13,6 +13,9 @@ import (
 )
 
 func main() {
+	STORED_NBRS := 3
+	BASE_URL := "10.12.103.97"
+
 	// Parse arguments
 	usageStr := "usage: go run main.go <port>"
 	if len(os.Args) == 1 {
@@ -25,25 +28,24 @@ func main() {
 		os.Exit(0)
 	}
 
-	STORED_NBRS := 4
-
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
 	// create a handler that stores and updates our node information
-	handler := api.NewHandler(fmt.Sprintf("http://10.12.103.97:%d", port), STORED_NBRS)
+	handler := api.NewHandler(fmt.Sprintf("http://%s:%d", BASE_URL, port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+1000) % 5000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+2000) % 5000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://10.12.103.97:%d", (port+3000) % 5000))
+	handler.NodeInfo.NodeHash = fmt.Sprintf("%d", port) // DEBUG: REMOVE WHEN DONE
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000) % 5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000) % 5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000) % 5000))
 
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
 	// expose endpoints
 	router.HandleFunc("/api/health", handler.HealthCheck).Methods("GET")
-	router.HandleFunc("/api/cycleHealth/{StartingNodeHash}/", handler.CycleHealthCheck).Methods("GET")
-	// router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("PATCH")
-	// router.HandleFunc("/api/successors", handler.UpdateSuccessors).Methods("PATCH")
+	router.HandleFunc("/api/cycleHealth/{PreviousNodeHash}/", handler.CycleHealthCheck).Methods("GET")
+	// router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
+	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 
 	// Internal endpoints
 
