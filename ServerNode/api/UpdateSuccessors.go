@@ -79,6 +79,14 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			// Filter out self loops
+			for idx := 0; idx < len(updateResp.Successors); idx++ {
+				if updateResp.Successors[idx] == h.NodeInfo.NodeUrl {
+					updateResp.Successors = updateResp.Successors[:idx]
+					break
+				}
+			}
+			
 			// If it's not an overlap, update array
 			if CurrentOverlap == 0 {
 				h.NodeInfo.SuccessorArray = util.CopySliceString(updateResp.Successors)
@@ -90,6 +98,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 			if CurrentOverlap == 0 {
 				updateResp.Successors = updateResp.Successors[:len(updateResp.Successors)-1]
 			}
+
 			fmt.Printf("[Debug] returning successor array: %s\n", updateResp.Successors)
 			util.WriteResponse(w, updateResp, http.StatusOK)
 			return

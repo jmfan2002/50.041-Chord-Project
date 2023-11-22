@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	STORED_NBRS := 3
+	STORED_NBRS := 10
 	BASE_URL := "10.12.103.97"
 
 	// Parse arguments
