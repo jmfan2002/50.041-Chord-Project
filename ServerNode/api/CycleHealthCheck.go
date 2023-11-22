@@ -74,7 +74,6 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
-				fmt.Printf("[Debug] response received: %d\n", healthResp)
 
 				healthResp.CycleSize++
 				fmt.Printf("[Debug] received healthCheck response from child! nodes: %d\n", healthResp.CycleSize)

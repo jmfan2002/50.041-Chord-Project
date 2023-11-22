@@ -30,22 +30,22 @@ func TestCycleHealthCheck(t *testing.T) {
 	r.HandleFunc("/api/cycleHealth/{StartingNodeHash}/{FinishedLoop}", handler.CycleHealthCheck).Methods("GET")
 
 	t.Run("After looping, we reach the original node. we should return ok", func(t *testing.T) {
-		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, `{"CycleSize":1}`)
 	})
 
 	t.Run("After looping, we reach past original node, we should return ok", func(t *testing.T) {
 		handler.NodeInfo.NodeHash = "c"
-		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, `{"CycleSize":1}`)
 	})
 
 	t.Run("Loop but don't reach original, call to next node succeeds", func(t *testing.T) {
 		handler.NodeInfo.NodeHash = "a"
 		handler.NodeInfo.SuccessorArray = []string{"b","c"}
 		handler.Requester = &MockRequester{
-			Response: &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString("hello"))},
+			Response: &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(`{"CycleSize":1}`))},
 			Error:    nil,
 		}
-		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, ``)
+		RunHttpTest(r, t, "/api/cycleHealth/b/true", http.StatusOK, `{"CycleSize":2}`)
 	})
 
 	t.Run("No loop, call to next node times out", func(t *testing.T) {
