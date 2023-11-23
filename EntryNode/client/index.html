@@ -7,25 +7,26 @@
         <h1>Chord Interface</h1>
         <h2>Menu</h2>
         <div id="menu">
-            <div>
-                <button onclick="makeHealthCheck()">Health</button>
-            </div>
             <div id="getPanel">
                 <button onclick="getData()">Get data</button>
 
-                <label for="key">Key:</label>
-                <input type="text" name="key" />
+                <label for="key">Key: <input type="text" name="key" /></label>
             </div>
             <div id="addPanel">
                 <button onclick="addData()">Set data</button>
-                <label for="key">Key:</label>
-                <input type="text" name="key" />
-                <label for="value">Value:</label>
-                <input type="text" name="value" />
+                <label for="key">Key: <input type="text" name="key" /></label>
+
+                <label for="value"
+                    >Value: <input type="text" name="value"
+                /></label>
             </div>
             <div id="nodesPanel">
                 <button onclick="getNodes()">Get nodes</button>
                 <div id="nodeList"></div>
+            </div>
+            <div id="hashTablePanel">
+                <button onclick="getHashTable()">Get hash table</button>
+                <div id="hashTable"></div>
             </div>
         </div>
         <h2>Output</h2>

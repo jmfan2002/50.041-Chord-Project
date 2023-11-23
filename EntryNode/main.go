@@ -42,6 +42,7 @@ func main() {
 
 	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
 	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")
+	router.HandleFunc("/data/hashTable", entryServer.GetHashTable).Methods("GET")
 
 	router.HandleFunc("/join", entryServer.AddNode).Methods("POST")
 
