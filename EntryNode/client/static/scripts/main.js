@@ -50,6 +50,46 @@ async function addData() {
     }
 }
 
+async function getNodes() {
+    console.log('Retrieving nodes');
+
+    try {
+        const res = await fetch('/nodes', {
+            method: 'GET',
+        });
+
+        if (!res.ok) {
+            const errorMessage = `Error: ${res.statusText}`;
+            outputElem.innerText = errorMessage;
+            console.error(errorMessage);
+        } else {
+            const body = await res.json();
+            console.log(body);
+
+            const listContainer = document.getElementById('nodeList');
+
+            body.nodes.forEach((node) => {
+                const nodeElem = document.createElement('div');
+                nodeElem.innerText = node;
+                nodeElem.onclick = async () => {
+                    // Get health of node
+                    try {
+                        const healthRes = await fetch(`/health?node=${node}`, {
+                            method: 'GET',
+                        });
+                        handleResponse(healthRes);
+                    } catch (error) {
+                        handleFetchError(error);
+                    }
+                };
+                listContainer.appendChild(nodeElem);
+            });
+        }
+    } catch (error) {
+        handleFetchError(error);
+    }
+}
+
 async function handleResponse(res) {
     if (!res.ok) {
         const errorMessage = `Error: ${res.statusText}`;
