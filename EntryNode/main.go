@@ -3,8 +3,6 @@ package main
 import (
 	"EntryNode/entrypoint"
 	"flag"
-
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,25 +15,6 @@ type SampleStruct struct {
 	Val     string `json:"val"`
 	Data    string `json:"data"`
 	Message string `json:"message"`
-}
-
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Health check called")
-
-	sampleStruct := SampleStruct{
-		Val: "success!",
-	}
-
-	response, err := json.Marshal(sampleStruct)
-	if err != nil {
-		fmt.Println("error marshalling data")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,12 +38,14 @@ func main() {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./client/static"))))
 
 	// expose endpoints
-	router.HandleFunc("/health", healthCheck).Methods("GET")
+	router.HandleFunc("/health", entryServer.HealthCheck).Methods("GET")
 
 	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
 	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")
 
 	router.HandleFunc("/join", entryServer.AddNode).Methods("POST")
+
+	router.HandleFunc("/nodes", entryServer.GetNodes).Methods("GET")
 
 	// Serve webpage
 	router.HandleFunc("/", indexHandler)

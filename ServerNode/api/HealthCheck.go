@@ -12,7 +12,7 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Health check called")
 
 	sampleStruct := structs.SampleStruct{
-		Val: "success!",
+		Val: "Node is healthy",
 	}
 
 	response, err := json.Marshal(sampleStruct)
