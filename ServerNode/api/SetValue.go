@@ -1,53 +1,78 @@
 package api
 
 import (
+	"ServerNode/constants"
 	"ServerNode/structs"
+	"ServerNode/util"
 
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 )
 
 func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
-	// Get key and value from request
-	var reqBody structs.SetValueReqBody
+	fmt.Println("[Debug] Set value called")
 
-	fmt.Println("Set value called")
-
-	bodyBytes, err := io.ReadAll(r.Body)
+	// Read values from request -------------------------------------------
+	reqBody := &structs.SetValueReqBody{}
+	err := util.ReadBody(r.Body, reqBody)
 	if err != nil {
-		fmt.Println("Error reading request body")
-		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Printf("[ERROR] failed to read request body: %s\n", error.Error)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println(string(bodyBytes))
+	if reqBody.PreviousNodeHash == "" {
+		fmt.Println("[Debug] Called with no PreviousNodeHash")
+		reqBody.PreviousNodeHash = "nil"
+	}
 
-	err = json.Unmarshal(bodyBytes, &reqBody)
-	if err != nil {
-		fmt.Println("Error parsing request body")
-		w.WriteHeader(http.StatusInternalServerError)
+	EntryHash := util.Sha256String(reqBody.Key + reqBody.Nonce)
+
+	// We've reached the correct node -------------------------------------------
+	// Case 1: standard case
+	// Case 2: current node has looped back around to 0 and entry belongs in the node with lowest hash
+	if h.NodeInfo.NodeHash >= EntryHash || h.NodeInfo.NodeHash < reqBody.PreviousNodeHash && EntryHash > reqBody.PreviousNodeHash {
+		fmt.Printf("[Debug] Node %s is the correct destination for hash %s, inserting \n", h.NodeInfo.NodeUrl, EntryHash)
+		h.NodeInfo.NodeContents[reqBody.Key] = reqBody.Value
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
-	fmt.Println(reqBody)
+	// Not the correct node, keep searching -------------------------------------------
+	fmt.Printf("[Debug] continuing on the loop\n")
+	for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
+		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
-	h.NodeInfo.NodeContents[reqBody.ValueHash] = reqBody.Data
+		// Check the next descendant
+		requestEndpoint := fmt.Sprintf("/api")
+		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPost, reqBody, constants.REQUEST_TIMEOUT)
 
-	sampleStruct := structs.SetValueReqBody{
-		ValueHash: "",
-		Data:      "",
+		if err != nil {
+			// Descendent is unresponsive
+			fmt.Printf("[Warning] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
+
+		} else if resp.StatusCode != http.StatusOK {
+			// Descendent returns a bad status code, return
+			w.WriteHeader(resp.StatusCode)
+			return
+
+		} else {
+			// Descendent responds pass response forward
+			var nodeResponse = &structs.GetValueResponse{}
+			err := util.ReadBody(resp.Body, nodeResponse)
+			// time.Sleep(1 * time.Second)
+
+			if err != nil {
+				fmt.Printf("[Error] failed to decode response body: %s\n", err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			util.WriteResponse(w, nodeResponse, http.StatusOK)
+			return
+		}
 	}
 
-	response, err := json.Marshal(sampleStruct)
-	if err != nil {
-		fmt.Println("error marshalling data")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	fmt.Printf("[Error] all descendants have failed for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
+	w.WriteHeader(http.StatusInternalServerError)
 }

@@ -33,7 +33,7 @@ func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNode
 
 		// Check the next descendant
 		requestEndpoint := fmt.Sprintf("/api/%s/%s/%s", Key, Nonce, h.NodeInfo.NodeHash)
-		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, constants.REQUEST_TIMEOUT)
+		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, nil, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
 			// Descendent is unresponsive
