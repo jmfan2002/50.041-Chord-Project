@@ -51,10 +51,11 @@ func main() {
 	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 
-	router.HandleFunc("/api/{ValueHash}", handler.GetValue).Methods("GET")
+	router.HandleFunc("/api/{Key}/{Nonce}", handler.GetValue).Methods("GET")
 	router.HandleFunc("/api", handler.SetValue).Methods("POST")
 
 	// Internal endpoints
+	router.HandleFunc("/api/{Key}/{Nonce}/{PreviousNodeHash}", handler.GetValueInternal).Methods("GET")
 
 	// Catch all undefined endpoints
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +81,6 @@ func main() {
 			bytes.NewBuffer(j))
 		fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 	}()
-	// log.Fatal(http.Serve(ln, router))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
 
 }
