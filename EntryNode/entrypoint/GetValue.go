@@ -6,8 +6,8 @@ import (
 )
 
 type GetValueResBody struct {
-	Val  string
-	Data string
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 func (entryPoint *EntryPoint) GetValue(w http.ResponseWriter, r *http.Request) {
@@ -18,8 +18,8 @@ func (entryPoint *EntryPoint) GetValue(w http.ResponseWriter, r *http.Request) {
 	val := entryPoint.getKVP(key)
 
 	sampleStruct := GetValueResBody{
-		Val:  val,
-		Data: "test123",
+		Key:   key,
+		Value: val,
 	}
 
 	util.WriteSuccessResponse(w, &sampleStruct)

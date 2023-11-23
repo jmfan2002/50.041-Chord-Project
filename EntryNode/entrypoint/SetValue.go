@@ -2,6 +2,7 @@ package entrypoint
 
 import (
 	"EntryNode/util"
+	"fmt"
 	"net/http"
 )
 
@@ -11,20 +12,21 @@ type SetValueReqBody struct {
 }
 
 type SetValueResBody struct {
-	Data string
+	Message string `json:"message"`
 }
 
 func (entryPoint *EntryPoint) SetValue(w http.ResponseWriter, r *http.Request) {
 	// Get key and value from request
 	var reqBody SetValueReqBody
+	fmt.Println("Got data set")
 
 	util.ReadRequestBody(w, r, &reqBody)
 
 	entryPoint.setKVP(reqBody.Key, reqBody.Value)
 
-	sampleStruct := SetValueResBody{
-		Data: "test123",
+	response := SetValueResBody{
+		Message: reqBody.Key + " set to " + reqBody.Value,
 	}
 
-	util.WriteSuccessResponse(w, &sampleStruct)
+	util.WriteSuccessResponse(w, &response)
 }
