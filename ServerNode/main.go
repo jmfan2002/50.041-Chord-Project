@@ -18,7 +18,7 @@ import (
 
 func main() {
 	STORED_NBRS := 10
-	BASE_URL := "10.12.103.97"
+	BASE_URL := "192.168.0.28"
 
 	// Parse arguments
 	usageStr := "usage: go run main.go <port>"
@@ -38,9 +38,9 @@ func main() {
 	handler := api.NewHandler(fmt.Sprintf("http://%s:%d", BASE_URL, port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
 	handler.NodeInfo.NodeHash = fmt.Sprintf("%d", port) // DEBUG: REMOVE WHEN DONE
-	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%5000))
-	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%5000))
-	// handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%5000))
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
@@ -53,10 +53,11 @@ func main() {
 
 	router.HandleFunc("/api/hashTable", handler.GetHashTable).Methods("GET")
 
-	router.HandleFunc("/api/{ValueHash}", handler.GetValue).Methods("GET")
+	router.HandleFunc("/api/{Key}/{Nonce}", handler.GetValue).Methods("GET")
 	router.HandleFunc("/api", handler.SetValue).Methods("POST")
 
 	// Internal endpoints
+	router.HandleFunc("/api/{Key}/{Nonce}/{PreviousNodeHash}", handler.GetValueInternal).Methods("GET")
 
 	// Catch all undefined endpoints
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +83,6 @@ func main() {
 			bytes.NewBuffer(j))
 		fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 	}()
-	// log.Fatal(http.Serve(ln, router))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
 
 }

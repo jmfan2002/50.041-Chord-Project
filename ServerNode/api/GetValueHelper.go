@@ -4,38 +4,26 @@ import (
 	"ServerNode/constants"
 	"ServerNode/structs"
 	"ServerNode/util"
-
 	"fmt"
 	"net/http"
 )
 
-func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("[Debug] Set value called")
-
-	// Read values from request -------------------------------------------
-	reqBody := &structs.SetValueReqBody{}
-	err := util.ReadBody(r.Body, reqBody)
-	if err != nil {
-		fmt.Printf("[ERROR] failed to read request body: %s\n", error.Error)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if reqBody.PreviousNodeHash == "" {
-		fmt.Println("[Debug] Called with no PreviousNodeHash")
-		reqBody.PreviousNodeHash = "nil"
-	}
-
-	EntryHash := util.Sha256String(reqBody.Key + reqBody.Nonce)
+func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNodeHash string) {
+	EntryHash := util.Sha256String(Key + Nonce)
 
 	// We've reached the correct node -------------------------------------------
 	// Case 1: standard case
 	// Case 2: current node has looped back around to 0 and entry belongs in the node with lowest hash
-	if h.NodeInfo.NodeHash >= EntryHash || h.NodeInfo.NodeHash < reqBody.PreviousNodeHash && EntryHash > reqBody.PreviousNodeHash {
-		fmt.Printf("[Debug] Node %s is the correct destination for hash %s, inserting \n", h.NodeInfo.NodeUrl, EntryHash)
-		h.NodeInfo.NodeContents[reqBody.Key] = reqBody.Value
-		w.WriteHeader(http.StatusOK)
-		return
+	if (h.NodeInfo.NodeHash > EntryHash || h.NodeInfo.NodeHash < PreviousNodeHash && EntryHash > PreviousNodeHash) {
+		fmt.Printf("[Debug] Node %s is the correct destination for hash %s \n", h.NodeInfo.NodeUrl, EntryHash)
+		entry, ok := h.NodeInfo.NodeContents[Key]
+		if (!ok) {
+			util.WriteResponse(w, nil, http.StatusNotFound)
+			return
+		} else {
+			util.WriteResponse(w, structs.GetValueResponse{Key: Key, Value: entry}, http.StatusOK)
+			return
+		}
 	}
 
 	// Not the correct node, keep searching -------------------------------------------
@@ -44,8 +32,8 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Check the next descendant
-		requestEndpoint := fmt.Sprintf("/api")
-		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPost, reqBody, constants.REQUEST_TIMEOUT)
+		requestEndpoint := fmt.Sprintf("/api/%s/%s/%s", Key, Nonce, h.NodeInfo.NodeHash)
+		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, nil, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
 			// Descendent is unresponsive

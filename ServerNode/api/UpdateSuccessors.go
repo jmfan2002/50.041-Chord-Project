@@ -52,7 +52,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 
 		// Request next descendent
 		requestEndpoint := fmt.Sprintf("/api/successors/%s/%d", h.NodeInfo.NodeHash, CurrentOverlap)
-		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPatch, constants.REQUEST_TIMEOUT)
+		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPatch, nil, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
 			// Descendent is unresponsive

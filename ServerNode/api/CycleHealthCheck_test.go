@@ -18,7 +18,7 @@ type MockRequester struct {
 	Error    error
 }
 
-func (m *MockRequester) SendRequest(baseUrl, endpoint, httpMethod string, timeoutMs int) (*http.Response, error) {
+func (m *MockRequester) SendRequest(baseUrl, endpoint, httpMethod string, contents interface{}, timeoutMs int) (*http.Response, error) {
 	return m.Response, m.Error
 }
 

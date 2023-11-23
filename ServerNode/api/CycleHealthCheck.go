@@ -35,7 +35,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 
 		// Check the next descendant
 		requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s", h.NodeInfo.NodeHash)
-		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, constants.REQUEST_TIMEOUT)
+		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, nil, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
 			// Descendent is unresponsive
