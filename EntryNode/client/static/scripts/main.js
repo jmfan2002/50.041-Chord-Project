@@ -4,7 +4,7 @@ async function makeHealthCheck() {
     console.log('Making health check');
 
     try {
-        const response = await fetch('/health', { method: 'GET' });
+        const response = await fetch('/health?node=' + node, { method: 'GET' });
         await handleResponse(response);
     } catch (error) {
         handleFetchError(error);
@@ -124,7 +124,9 @@ function createNodeComponent(node) {
     nodeElem.appendChild(healthBtn);
     nodeElem.appendChild(cycleHealthBtn);
 
-    healthBtn.onclick = makeHealthCheck;
+    healthBtn.onclick = () => {
+        makeHealthCheck(node);
+    };
 
     cycleHealthBtn.onclick = makeCycleHealthCheck;
 

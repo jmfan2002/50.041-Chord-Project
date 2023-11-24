@@ -17,6 +17,12 @@ func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request
 	queryParams := r.URL.Query()
 	serverAddress := queryParams.Get("node")
 
+	if serverAddress == "" {
+		fmt.Println("No server address provided")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// Send health request to server
 	resp, err := http.Get(serverAddress + "/api/health")
 	if err != nil {
