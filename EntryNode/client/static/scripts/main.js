@@ -26,13 +26,25 @@ async function makeCycleHealthCheck() {
 }
 
 async function getData() {
-    const keyInp = document.querySelector('#getPanel input[name=key]');
+    const keyInp = document.querySelector('input[name=getKey]');
     const key = keyInp.value;
     console.log('Getting data with key:', key);
 
     try {
-        const response = await fetch(`/data?key=${key}`, { method: 'GET' });
-        await handleResponse(response);
+        const res = await fetch(`/data?key=${key}`, { method: 'GET' });
+        if (res.ok) {
+            try {
+                const data = await res.json();
+                const outputElem = document.getElementById('dataOutput');
+                if (!data?.value) {
+                    outputElem.innerText = 'No data found';
+                } else {
+                    outputElem.innerText = 'Value:' + data.value;
+                }
+            } catch (error) {
+                console.log(data);
+            }
+        }
     } catch (error) {
         handleFetchError(error);
     }
@@ -41,8 +53,8 @@ async function getData() {
 async function addData() {
     console.log('Adding data');
 
-    const keyInp = document.querySelector('#addPanel input[name=key]');
-    const valueInp = document.querySelector('#addPanel input[name=value]');
+    const keyInp = document.querySelector('input[name=setKey]');
+    const valueInp = document.querySelector('input[name=setValue]');
     const data = {
         key: keyInp.value,
         value: valueInp.value,

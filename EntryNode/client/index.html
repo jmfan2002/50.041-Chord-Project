@@ -4,38 +4,57 @@
         <link rel="stylesheet" href="/static/styles/main.css" />
     </head>
     <body>
-        <h1>Chord Interface</h1>
-        <h2>Menu</h2>
-        <div id="menu">
-            <div id="cycleHealthPanel">
-                <button onclick="makeCycleHealthCheck()">
-                    Make Cycle Health Check
-                </button>
-            </div>
-            <div id="getPanel">
-                <button onclick="getData()">Get data</button>
+        <main>
+            <h1>Chord Interface</h1>
+            <section>
+                <h2>Status of system</h2>
+                <div id="cycleHealthPanel">
+                    <button onclick="makeCycleHealthCheck()">
+                        Make Cycle Health Check
+                    </button>
+                    <button onclick="getNodes()">Get nodes</button>
+                    <div id="nodeList"></div>
+                </div>
+            </section>
+            <section id="handleData">
+                <h2>Handle data</h2>
+                <div>
+                    <div>
+                        <h3>Update and set data</h3>
+                        <div class="inputContainer">
+                            <div>
+                                <label for="key">Key:</label>
+                                <input type="text" name="setKey" />
+                            </div>
+                            <div>
+                                <label for="value">Value:</label>
+                                <input type="text" name="setValue" />
+                            </div>
+                            <button onclick="addData()">Set data</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Get data</h3>
+                        <div class="inputContainer">
+                            <div>
+                                <label for="key">Key:</label>
+                                <input type="text" name="getKey" />
+                            </div>
+                            <button onclick="getData()">Get data</button>
+                        </div>
+                        <p id="dataOutput">Value:</p>
+                    </div>
+                    <div>
+                        <h3>Get data</h3>
+                        <button onclick="getHashTable()">Get hash table</button>
+                        <div id="hashTable"></div>
+                    </div>
+                </div>
+            </section>
 
-                <label for="key">Key: <input type="text" name="key" /></label>
-            </div>
-            <div id="addPanel">
-                <button onclick="addData()">Set data</button>
-                <label for="key">Key: <input type="text" name="key" /></label>
-
-                <label for="value"
-                    >Value: <input type="text" name="value"
-                /></label>
-            </div>
-            <div id="nodesPanel">
-                <button onclick="getNodes()">Get nodes</button>
-                <div id="nodeList"></div>
-            </div>
-            <div id="hashTablePanel">
-                <button onclick="getHashTable()">Get hash table</button>
-                <div id="hashTable"></div>
-            </div>
-        </div>
-        <h2>Output</h2>
-        <p id="output">Output...</p>
+            <h2>Output</h2>
+            <p id="output">Output...</p>
+        </main>
         <script src="/static/scripts/main.js"></script>
     </body>
 </html>
