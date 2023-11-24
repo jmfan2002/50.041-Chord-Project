@@ -23,11 +23,11 @@ type TableEntry struct {
 func (h *Handler) GetHashTable(w http.ResponseWriter, r *http.Request) {
 	hashTable := []TableEntry{}
 
-	for key, value := range h.NodeInfo.NodeContents {
+	for _, value := range h.NodeInfo.NodeContents {
 		hashTable = append(hashTable, TableEntry{
 			NodeAdress: h.NodeInfo.NodeUrl,
-			Key:        key,
-			Value:      value,
+			Key:        value.Key,
+			Value:      value.Value,
 		})
 	}
 

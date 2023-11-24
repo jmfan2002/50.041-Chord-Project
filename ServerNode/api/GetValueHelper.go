@@ -14,14 +14,14 @@ func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNode
 	// We've reached the correct node -------------------------------------------
 	// Case 1: standard case
 	// Case 2: current node has looped back around to 0 and entry belongs in the node with lowest hash
-	if (h.NodeInfo.NodeHash > EntryHash || h.NodeInfo.NodeHash < PreviousNodeHash && EntryHash > PreviousNodeHash) {
+	if h.NodeInfo.NodeHash > EntryHash || h.NodeInfo.NodeHash < PreviousNodeHash && EntryHash > PreviousNodeHash {
 		fmt.Printf("[Debug] Node %s is the correct destination for hash %s \n", h.NodeInfo.NodeUrl, EntryHash)
-		entry, ok := h.NodeInfo.NodeContents[Key]
-		if (!ok) {
+		entry, ok := h.NodeInfo.NodeContents[EntryHash]
+		if !ok {
 			util.WriteResponse(w, nil, http.StatusNotFound)
 			return
 		} else {
-			util.WriteResponse(w, structs.GetValueResponse{Key: Key, Value: entry}, http.StatusOK)
+			util.WriteResponse(w, entry, http.StatusOK)
 			return
 		}
 	}
@@ -46,7 +46,7 @@ func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNode
 
 		} else {
 			// Descendent responds pass response forward
-			var nodeResponse = &structs.GetValueResponse{}
+			var nodeResponse = &structs.EntryResponse{}
 			err := util.ReadBody(resp.Body, nodeResponse)
 			// time.Sleep(1 * time.Second)
 

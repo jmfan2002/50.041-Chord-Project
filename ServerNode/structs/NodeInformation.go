@@ -8,7 +8,7 @@ import (
 type NodeInformation struct {
 	NodeUrl          string
 	NodeHash         string
-	NodeContents     map[string]string
+	NodeContents     map[string]EntryResponse
 	PredecessorArray []string
 	SuccessorArray   []string
 	StoredNbrs       int
@@ -27,7 +27,7 @@ func NewNodeInformation(nodeUrl string, storedNbrs int) *NodeInformation {
 	return &NodeInformation{
 		NodeUrl:          nodeUrl,
 		NodeHash:         hashStr,
-		NodeContents:     make(map[string]string),
+		NodeContents:     make(map[string]EntryResponse),
 		PredecessorArray: make([]string, 0),
 		SuccessorArray:   make([]string, 0),
 		StoredNbrs:       storedNbrs,
