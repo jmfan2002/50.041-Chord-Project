@@ -1,6 +1,7 @@
 package entrypoint
 
 import (
+	"EntryNode/util"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,6 +19,9 @@ type TableEntry struct {
 
 func (entryPoint *EntryPoint) GetHashTable(w http.ResponseWriter, r *http.Request) {
 	hashTable := []TableEntry{}
+
+	fmt.Println("Get hash table called")
+	fmt.Println("Getting hash table from", len(entryPoint.servers), "nodes")
 
 	// Go through all nodes
 	for _, nodeURL := range entryPoint.servers {
@@ -43,18 +47,9 @@ func (entryPoint *EntryPoint) GetHashTable(w http.ResponseWriter, r *http.Reques
 
 	}
 
-	responseData := GetHashTableResBody{
+	response := GetHashTableResBody{
 		HashTable: hashTable,
 	}
 
-	response, err := json.Marshal(responseData)
-	if err != nil {
-		fmt.Println("error marshalling data")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	util.WriteSuccessResponse(w, &response)
 }

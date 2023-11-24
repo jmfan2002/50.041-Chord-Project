@@ -1,6 +1,6 @@
 const outputElem = document.getElementById('output');
 
-async function makeHealthCheck() {
+async function makeHealthCheck(node) {
     console.log('Making health check');
 
     try {

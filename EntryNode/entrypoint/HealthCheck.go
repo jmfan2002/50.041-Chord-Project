@@ -1,6 +1,7 @@
 package entrypoint
 
 import (
+	"EntryNode/util"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,7 +9,7 @@ import (
 )
 
 type HealthResBody struct {
-	Message string `json:"message"`
+	Val string `json:"val"`
 }
 
 func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request) {
@@ -36,18 +37,14 @@ func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	responseData := HealthResBody{
-		Message: string(bodyBytes),
-	}
+	response := HealthResBody{}
 
-	response, err := json.Marshal(responseData)
+	err = json.Unmarshal(bodyBytes, &response)
 	if err != nil {
-		fmt.Println("error marshalling data")
+		fmt.Println("Error parsing request body")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	util.WriteSuccessResponse(w, &response)
 }

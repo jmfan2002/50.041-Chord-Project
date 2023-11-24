@@ -52,7 +52,8 @@ func main() {
 	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 	router.HandleFunc("/api/entries", handler.ReassignEntries).Methods("PATCH")
-
+	
+	router.HandleFunc("/api/hashTable", handler.GetHashTable).Methods("GET")
 	router.HandleFunc("/api/{Key}/{Nonce}", handler.GetValue).Methods("GET")
 	router.HandleFunc("/api", handler.SetValue).Methods("POST")
 
