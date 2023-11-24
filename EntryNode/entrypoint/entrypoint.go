@@ -4,12 +4,12 @@ import (
 	"EntryNode/util"
 	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
+	"strconv"
 )
 
 type EntryPoint struct {
@@ -17,44 +17,49 @@ type EntryPoint struct {
 
 	// Maps hashes as strings, to ips as strings
 	servers map[string]string
+
+	// number of faults to tolerate
+	toleratedFaults int
 }
 
-func New() *EntryPoint {
+func New(k int) *EntryPoint {
 	return &EntryPoint{
-		make([]big.Int, 0),
-		make(map[string]string),
+		ipHashes:        make([]big.Int, 0),
+		servers:         make(map[string]string),
+		toleratedFaults: k,
 	}
 }
 
 type ChordSetValueReq struct {
-	ValueHash string `json:"ValueHash"`
-	Data      string `json:"Data"`
+	Key   string
+	Value string
+	Nonce string
 }
 
 func (entryPoint *EntryPoint) setKVP(key string, val string) {
-	serverAddress := entryPoint.Lookup(key)
-	fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
+	for i := 0; i < entryPoint.toleratedFaults; i += 1 {
+		serverAddress := entryPoint.Lookup(key, strconv.Itoa(i))
+		fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
 
-	h := sha256.New()
-	h.Write([]byte(key))
-	b := h.Sum(nil)
+		j, err := json.Marshal(ChordSetValueReq{
+			key,
+			val,
+			strconv.Itoa(i),
+		})
+		if err != nil {
+			fmt.Println("Error creating request body")
+			continue
+		}
 
-	j, err := json.Marshal(ChordSetValueReq{
-		hex.EncodeToString(b), val,
-	})
-	if err != nil {
-		fmt.Println("Error creating request body")
-		return
+		res, err := http.Post(serverAddress+"/api",
+			"application/json",
+			bytes.NewBuffer(j),
+		)
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
+		fmt.Printf("Request result: %s\n", res.Status)
 	}
-
-	res, err := http.Post(serverAddress+"/api",
-		"application/json",
-		bytes.NewBuffer(j),
-	)
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
-	}
-	fmt.Printf("Request result: %s\n", res.Status)
 }
 
 type ChordGetValueRes struct {
@@ -62,38 +67,37 @@ type ChordGetValueRes struct {
 }
 
 func (entryPoint *EntryPoint) getKVP(key string) string {
-	// Find the server that should have the key
-	serverAddress := entryPoint.Lookup(key)
-	fmt.Printf("Getting %s from %s\n", key, serverAddress)
+	for i := 0; i < entryPoint.toleratedFaults; i += 1 {
+		// Find the server that should have the key
+		serverAddress := entryPoint.Lookup(key, strconv.Itoa(i))
+		fmt.Printf("Getting %s from %s\n", key, serverAddress)
 
-	// Encode the key for request
-	h := sha256.New()
-	h.Write([]byte(key))
-	b := h.Sum(nil)
+		// Send request to server
+		resp, err := http.Get(
+			fmt.Sprintf("%s/api/%s/%s", serverAddress, key, strconv.Itoa(i)))
+		if err != nil {
+			fmt.Printf("An error occurred %s\n", err.Error())
+		}
 
-	// Send request to server
-	resp, err := http.Get(serverAddress + "/api/" + hex.EncodeToString(b))
-	if err != nil {
-		fmt.Printf("An error occurred %s\n", err.Error())
+		fmt.Printf("Request result: %s\n", resp.Status)
+
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading server node response")
+			continue
+		}
+		return string(bodyBytes)
 	}
 
-	fmt.Printf("Request result: %s\n", resp.Status)
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading server node response")
-		return ""
-	}
-
-	return string(bodyBytes)
+	return ""
 }
 
 // Returns the IP address of the node responsible for the given key
 // This is pretty much the only part the Chord paper exposes in their API,
 // but we add some other functions for a nicer user application API.
-func (entryPoint *EntryPoint) Lookup(key string) string {
+func (entryPoint *EntryPoint) Lookup(key string, nonce string) string {
 	h := sha256.New()
-	h.Write([]byte(key))
+	h.Write([]byte(key + nonce))
 	z := big.NewInt(0)
 	z.SetBytes(h.Sum(nil))
 
@@ -216,6 +220,18 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 			http.MethodPatch,
 			predIp+"/api/successors/nil/0",
 			bytes.NewBuffer(data),
+		)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		// 5. call ReassignEntries on the node directly preceding the new node. this will move the necessary values to the new node
+		fmt.Println("Step 5")
+		_, err = http.NewRequest(
+			http.MethodPatch,
+			predIp+"/api/entries",
+			bytes.NewBuffer([]byte{}),
 		)
 		if err != nil {
 			fmt.Println(err)

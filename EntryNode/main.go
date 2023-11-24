@@ -25,12 +25,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Command line flags
 	portPtr := flag.Int("port", 3000, "The port to serve the entrypoint on")
+	kPtr := flag.Int("k", 1, "The number of Chord node faults to tolerate. We attempt to store k+1 keys in the network.")
 	flag.Parse()
 
 	port := *portPtr
+	k := *kPtr
 
 	// create entrypoint
-	entryServer := entrypoint.New()
+	entryServer := entrypoint.New(k)
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
