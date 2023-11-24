@@ -51,8 +51,6 @@ func main() {
 	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 
-	router.HandleFunc("/api/hashTable", handler.GetHashTable).Methods("GET")
-
 	router.HandleFunc("/api/{Key}/{Nonce}", handler.GetValue).Methods("GET")
 	router.HandleFunc("/api", handler.SetValue).Methods("POST")
 
@@ -70,7 +68,7 @@ func main() {
 	// ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 
 	j, _ := json.Marshal(structs.JoinReq{
-		NewNodeAddress: fmt.Sprintf("http://localhost:%d", port),
+		fmt.Sprintf("http://localhost:%d", port),
 	})
 	entry := "127.0.0.1:3000"
 

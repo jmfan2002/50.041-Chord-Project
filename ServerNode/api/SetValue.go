@@ -27,7 +27,9 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	EntryHash := util.Sha256String(reqBody.Key + reqBody.Nonce)
-	fmt.Printf("[Debug] current node hash: %s\n", EntryHash)
+	fmt.Printf("[Debug] entry hash: %s\n", EntryHash)
+	fmt.Printf("\tprevious node hash: %s\n", reqBody.PreviousNodeHash)
+	fmt.Printf("\tprevious current node hash: %s\n", h.NodeInfo.NodeHash)
 
 	// We've reached the correct node -------------------------------------------
 	// Case 1: standard case
@@ -35,6 +37,7 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 	if h.NodeInfo.NodeHash >= EntryHash || h.NodeInfo.NodeHash < reqBody.PreviousNodeHash && EntryHash > reqBody.PreviousNodeHash {
 		fmt.Printf("[Debug] Node %s is the correct destination for hash %s, inserting \n", h.NodeInfo.NodeUrl, EntryHash)
 		h.NodeInfo.NodeContents[reqBody.Key] = reqBody.Value
+		util.WriteResponse(w, structs.GetValueResponse{Key: reqBody.Key, Value: h.NodeInfo.NodeContents[reqBody.Key]}, http.StatusOK)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -46,6 +49,7 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 
 		// Check the next descendant
 		requestEndpoint := fmt.Sprintf("/api")
+		reqBody.PreviousNodeHash = h.NodeInfo.NodeHash
 		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPost, reqBody, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
@@ -61,7 +65,6 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 			// Descendent responds pass response forward
 			var nodeResponse = &structs.GetValueResponse{}
 			err := util.ReadBody(resp.Body, nodeResponse)
-			// time.Sleep(1 * time.Second)
 
 			if err != nil {
 				fmt.Printf("[Error] failed to decode response body: %s\n", err.Error())
