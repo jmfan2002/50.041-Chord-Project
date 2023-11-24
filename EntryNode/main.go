@@ -39,6 +39,7 @@ func main() {
 
 	// expose endpoints
 	router.HandleFunc("/health", entryServer.HealthCheck).Methods("GET")
+	router.HandleFunc("/cycleHealth", entryServer.CycleHealth).Methods("GET")
 
 	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
 	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")

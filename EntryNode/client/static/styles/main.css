@@ -38,7 +38,7 @@ button:hover {
 }
 
 #nodesPanel {
-  min-width: 20rem !important;
+  min-width: 16rem !important;
 }
 
 #nodeList > div {

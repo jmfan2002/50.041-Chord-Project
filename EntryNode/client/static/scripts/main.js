@@ -11,8 +11,22 @@ async function makeHealthCheck() {
     }
 }
 
+async function makeCycleHealthCheck() {
+    // Cycle health of node
+    console.log('Cycling health');
+    try {
+        const healthRes = await fetch(`/cycleHealth`, {
+            method: 'GET',
+        });
+
+        handleResponse(healthRes);
+    } catch (error) {
+        handleFetchError(error);
+    }
+}
+
 async function getData() {
-    const keyInp = document.querySelector('#getPanel > input[name=key]');
+    const keyInp = document.querySelector('#getPanel input[name=key]');
     const key = keyInp.value;
     console.log('Getting data with key:', key);
 
@@ -27,8 +41,8 @@ async function getData() {
 async function addData() {
     console.log('Adding data');
 
-    const keyInp = document.querySelector('#addPanel > input[name=key]');
-    const valueInp = document.querySelector('#addPanel > input[name=value]');
+    const keyInp = document.querySelector('#addPanel input[name=key]');
+    const valueInp = document.querySelector('#addPanel input[name=value]');
     const data = {
         key: keyInp.value,
         value: valueInp.value,
@@ -64,23 +78,17 @@ async function getNodes() {
             console.error(errorMessage);
         } else {
             const body = await res.json();
-            console.log(body);
 
             const listContainer = document.getElementById('nodeList');
+            listContainer.innerHTML = '';
 
-            body.nodes.forEach((node) => {
-                const nodeElem = document.createElement('div');
-                nodeElem.innerText = node;
-                nodeElem.onclick = async () => {
-                    // Get health of node
-                    try {
-                        const healthRes = await fetch(`/health?node=${node}`, {
-                            method: 'GET',
-                        });
-                        handleResponse(healthRes);
-                    } catch (error) {
-                        handleFetchError(error);
-                    }
+            body.nodes?.forEach((node) => {
+                listContainer.appendChild(createNodeComponent(node));
+            });
+        }
+    } catch (error) {
+        handleFetchError(error);
+    }
 }
 
 async function getHashTable() {
@@ -114,21 +122,16 @@ function createNodeComponent(node) {
     const nodeElem = document.createElement('div');
     const nodeText = document.createElement('span');
     const healthBtn = document.createElement('button');
-    const cycleHealthBtn = document.createElement('button');
 
     nodeText.innerText = node;
     healthBtn.innerText = 'Health';
-    cycleHealthBtn.innerText = 'Cycle Health';
 
     nodeElem.appendChild(nodeText);
     nodeElem.appendChild(healthBtn);
-    nodeElem.appendChild(cycleHealthBtn);
 
     healthBtn.onclick = () => {
         makeHealthCheck(node);
     };
-
-    cycleHealthBtn.onclick = makeCycleHealthCheck;
 
     return nodeElem;
 }
