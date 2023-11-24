@@ -27,6 +27,7 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	EntryHash := util.Sha256String(reqBody.Key + reqBody.Nonce)
+	fmt.Printf("[Debug] current node hash: %s\n", EntryHash)
 
 	// We've reached the correct node -------------------------------------------
 	// Case 1: standard case

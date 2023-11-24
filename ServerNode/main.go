@@ -18,7 +18,7 @@ import (
 
 func main() {
 	STORED_NBRS := 10
-	BASE_URL := "192.168.0.28"
+	BASE_URL := "10.12.103.97"
 
 	// Parse arguments
 	usageStr := "usage: go run main.go <port>"
