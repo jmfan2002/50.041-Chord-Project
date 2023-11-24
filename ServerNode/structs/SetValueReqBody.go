@@ -8,8 +8,8 @@ type SetValueReqBody struct {
 	PreviousNodeHash string
 }
 
-func NewSetValueReqBody(key string, value string, nonce string) SetValueReqBody {
-	return SetValueReqBody{
+func NewSetValueReqBody(key string, value string, nonce string) *SetValueReqBody {
+	return &SetValueReqBody{
 		Key:              key,
 		Value:            value,
 		Nonce:            nonce,

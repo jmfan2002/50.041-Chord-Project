@@ -38,9 +38,10 @@ func main() {
 	handler := api.NewHandler(fmt.Sprintf("http://%s:%d", BASE_URL, port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
 	handler.NodeInfo.NodeHash = fmt.Sprintf("%d", port) // DEBUG: REMOVE WHEN DONE
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%5000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%5000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%5000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%6000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%6000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%6000))
+	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+4000)%6000))
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
@@ -50,6 +51,7 @@ func main() {
 	router.HandleFunc("/api/successors", handler.SetSuccessors).Methods("POST")
 	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
+	router.HandleFunc("/api/entries", handler.ReassignEntries).Methods("PATCH")
 
 	router.HandleFunc("/api/{Key}/{Nonce}", handler.GetValue).Methods("GET")
 	router.HandleFunc("/api", handler.SetValue).Methods("POST")
