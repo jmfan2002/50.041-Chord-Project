@@ -36,29 +36,33 @@ type ChordSetValueReq struct {
 	Nonce string
 }
 
+func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
+	serverAddress := entryPoint.Lookup(key, nonce)
+	fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
+
+	j, err := json.Marshal(ChordSetValueReq{
+		key,
+		val,
+		nonce,
+	})
+	if err != nil {
+		fmt.Println("Error creating request body")
+		return
+	}
+
+	res, err := http.Post(serverAddress+"/api",
+		"application/json",
+		bytes.NewBuffer(j),
+	)
+	if err != nil {
+		fmt.Printf("An error occurred %s\n", err.Error())
+	}
+	fmt.Printf("Request result: %s\n", res.Status)
+}
+
 func (entryPoint *EntryPoint) setKVP(key string, val string) {
 	for i := 0; i < entryPoint.toleratedFaults; i += 1 {
-		serverAddress := entryPoint.Lookup(key, strconv.Itoa(i))
-		fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
-
-		j, err := json.Marshal(ChordSetValueReq{
-			key,
-			val,
-			strconv.Itoa(i),
-		})
-		if err != nil {
-			fmt.Println("Error creating request body")
-			continue
-		}
-
-		res, err := http.Post(serverAddress+"/api",
-			"application/json",
-			bytes.NewBuffer(j),
-		)
-		if err != nil {
-			fmt.Printf("An error occurred %s\n", err.Error())
-		}
-		fmt.Printf("Request result: %s\n", res.Status)
+		go entryPoint.trySetKVP(key, strconv.Itoa(i), val)
 	}
 }
 
@@ -66,30 +70,60 @@ type ChordGetValueRes struct {
 	NodeContents map[string]string
 }
 
+type Res struct {
+	data    string
+	isError bool
+}
+
+func (entrypoint *EntryPoint) tryGetKVP(serverAddress string, key string, nonce string, out chan Res) {
+	resp, err := http.Get(
+		fmt.Sprintf("%s/api/%s/%s", serverAddress, key, nonce))
+	if err != nil {
+		fmt.Printf("An error occurred %s\n", err.Error())
+		// Attempt to store the key elsewhere
+		out <- Res{nonce, true}
+		return
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading server node response")
+		out <- Res{"", true}
+		return
+	}
+	out <- Res{
+		string(bodyBytes),
+		false,
+	}
+}
+
 func (entryPoint *EntryPoint) getKVP(key string) string {
+	in := make(chan Res)
+
 	for i := 0; i < entryPoint.toleratedFaults; i += 1 {
 		// Find the server that should have the key
 		serverAddress := entryPoint.Lookup(key, strconv.Itoa(i))
 		fmt.Printf("Getting %s from %s\n", key, serverAddress)
 
-		// Send request to server
-		resp, err := http.Get(
-			fmt.Sprintf("%s/api/%s/%s", serverAddress, key, strconv.Itoa(i)))
-		if err != nil {
-			fmt.Printf("An error occurred %s\n", err.Error())
-		}
-
-		fmt.Printf("Request result: %s\n", resp.Status)
-
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error reading server node response")
-			continue
-		}
-		return string(bodyBytes)
+		go entryPoint.tryGetKVP(serverAddress, key, strconv.Itoa(i), in)
 	}
 
-	return ""
+	errors := make([]string, 0)
+	out := ""
+	for i := 0; i < entryPoint.toleratedFaults; i += 1 {
+		next := <-in
+		if !next.isError {
+			out = next.data
+		} else {
+			errors = append(errors, next.data)
+		}
+	}
+
+	for _, nonce := range errors {
+		entryPoint.trySetKVP(key, nonce, out)
+	}
+
+	return out
 }
 
 // Returns the IP address of the node responsible for the given key
@@ -238,74 +272,4 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 			continue
 		}
 	}
-
-	// TODO: delete the stuff below
-
-	// Get predecessor and successor node info, if they exist
-
-	/*
-		if numServers == 1 {
-			return
-		}
-
-		succIp := entryPoint.servers[entryPoint.ipHashes[(insertionPoint+1)%numServers].Text(16)]
-
-		var predOfSucc Predecessors
-		var succOfPred Successors
-
-		// get predecessors of the successor node
-		resp, _ := http.Get(succIp + "/api/predecessors")
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error reading request body")
-			return
-		}
-
-		err = json.Unmarshal(bodyBytes, &predOfSucc)
-		if err != nil {
-			fmt.Println("Error parsing request body")
-			return
-		}
-
-		// get predecessors of the successor node
-		resp, _ = http.Get(predIp + "/api/successors")
-		bodyBytes, err = io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error reading request body")
-			return
-		}
-
-		err = json.Unmarshal(bodyBytes, &succOfPred)
-		if err != nil {
-			fmt.Println("Error parsing request body")
-			return
-		}
-
-		// Update new node
-		data, err := json.Marshal(predOfSucc)
-		if err != nil {
-			fmt.Printf("An error occurred %s\n", err.Error())
-		}
-		patchRes, err := http.NewRequest(
-			http.MethodPatch, ipAddress+"/api/SetPredecessors",
-			bytes.NewBuffer(data),
-		)
-		if err != nil {
-			fmt.Printf("An error occurred %s\n", err.Error())
-		}
-		fmt.Printf(patchRes.Response.Status)
-
-		data, err = json.Marshal(succOfPred)
-		if err != nil {
-			fmt.Printf("An error occurred %s\n", err.Error())
-		}
-		patchRes, err = http.NewRequest(
-			http.MethodPatch, ipAddress+"/api/SetSuccessors",
-			bytes.NewBuffer(data),
-		)
-		if err != nil {
-			fmt.Printf("An error occurred %s\n", err.Error())
-		}
-		fmt.Printf(patchRes.Response.Status)
-	*/
 }
