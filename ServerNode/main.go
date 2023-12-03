@@ -3,6 +3,7 @@ package main
 import (
 	"ServerNode/api"
 	"ServerNode/structs"
+	"ServerNode/util"
 	"bytes"
 	"encoding/json"
 	"strconv"
@@ -18,7 +19,7 @@ import (
 
 func main() {
 	STORED_NBRS := 10
-	BASE_URL := "10.12.103.97"
+	BASE_URL := "localhost" // "10.12.103.97"
 
 	// Parse arguments
 	usageStr := "usage: go run main.go <port>"
@@ -37,11 +38,13 @@ func main() {
 	// create a handler that stores and updates our node information
 	handler := api.NewHandler(fmt.Sprintf("http://%s:%d", BASE_URL, port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
-	handler.NodeInfo.NodeHash = fmt.Sprintf("%d", port) // DEBUG: REMOVE WHEN DONE
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%6000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%6000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%6000))
-	handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+4000)%6000))
+	handler.NodeInfo.NodeHash = fmt.Sprintf("%s", util.Sha256String(fmt.Sprintf("http://%s:%d", BASE_URL, port))) // DEBUG: REMOVE WHEN DONE
+	/*
+		handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+1000)%6000))
+		handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+2000)%6000))
+		handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+3000)%6000))
+		handler.NodeInfo.SuccessorArray = append(handler.NodeInfo.SuccessorArray, fmt.Sprintf("http://%s:%d", BASE_URL, (port+4000)%6000))
+	*/
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
@@ -52,10 +55,12 @@ func main() {
 	router.HandleFunc("/api/successors", handler.GetSuccessors).Methods("GET")
 	router.HandleFunc("/api/successors/{PreviousNodeHash}/{CurrentOverlap}", handler.UpdateSuccessors).Methods("PATCH")
 	router.HandleFunc("/api/entries", handler.ReassignEntries).Methods("PATCH")
-	
+
 	router.HandleFunc("/api/hashTable", handler.GetHashTable).Methods("GET")
 	router.HandleFunc("/api/{Key}/{Nonce}", handler.GetValue).Methods("GET")
 	router.HandleFunc("/api", handler.SetValue).Methods("POST")
+
+	router.HandleFunc("/api/join", handler.NewNode).Methods("POST")
 
 	// Internal endpoints
 	router.HandleFunc("/api/{Key}/{Nonce}/{PreviousNodeHash}", handler.GetValueInternal).Methods("GET")
@@ -71,7 +76,7 @@ func main() {
 	// ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 
 	j, _ := json.Marshal(structs.JoinReq{
-		fmt.Sprintf("http://localhost:%d", port),
+		fmt.Sprintf("http://%s:%d", BASE_URL, port),
 	})
 	entry := "127.0.0.1:3000"
 
