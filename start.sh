@@ -3,10 +3,51 @@ if [ -z "$1" ]; then
     exit
 fi
 
+TOLERANCE=1
+
+# set up docker compose string
 NUM_SERVERS=$1
-PORTS=4000-$((4000+NUM_SERVERS-1))
-sed "s=NUM_SERVERS=$NUM_SERVERS=g;s=PORTS=$PORTS=g" ./docker-compose_template.yml > ./docker-compose.yml
+SERVER_NODE_STR='
+  server_nodeSERVER_NUM:
+    build: ./ServerNode
+    image: server_node
+    entrypoint: ["./ServerNode", "PORT_NUM", "TOLERANCE", "server_nodeSERVER_NUM"]
+    ports:
+      - "PORT_NUM:PORT_NUM"
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - chord-network
+'
+COMPOSE_STR='
+version: "3.4"
+
+services:
+  entry_node:
+    build: ./EntryNode
+    image: entry_node
+    ports:
+      - "3000:3000"
+    entrypoint: ["./EntryNode", "-port=3000", "-k=TOLERANCE"]
+    networks:
+      - chord-network
+'
+END_STR='
+networks:
+  chord-network:
+'
+for i in $(seq 1 $NUM_SERVERS); do
+    STR="${SERVER_NODE_STR//SERVER_NUM/${i}}"
+    COMPOSE_STR+="${STR//PORT_NUM/$((i+4000))}"
+done
+COMPOSE_STR+="${END_STR}"
+COMPOSE_STR="${COMPOSE_STR//TOLERANCE/${TOLERANCE}}"
+echo "${COMPOSE_STR}">./docker-compose.yml
 
 # optional: remove -d --build to keep docker compose active in the terminal,
-#       to show live container logs
+#       to show live container logs in the terminal
 docker compose -f "./docker-compose.yml" -p chord-network up -d --build
+
+# cleanup
+rm "./docker-compose.yml"

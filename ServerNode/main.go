@@ -18,12 +18,10 @@ import (
 )
 
 func main() {
-	BASE_URL := "localhost" // "10.12.103.97"
-
 	// Parse arguments
-	usageStr := "usage: go run main.go <port> <storedNbrs>"
-	if len(os.Args) == 2 {
-		fmt.Printf("[Error] port or storedNbrs missing. %s\n", usageStr)
+	usageStr := "usage: go run main.go <port> <storedNbrs> <baseURL>"
+	if len(os.Args) < 4 {
+		fmt.Printf("[Error] port or storedNbrs or baseURL missing. %s\n", usageStr)
 		os.Exit(0)
 	}
 	port, err := strconv.Atoi(os.Args[1])
@@ -33,11 +31,16 @@ func main() {
 	}
 
 	STORED_NBRS, err := strconv.Atoi(os.Args[2])
-	if (err != nil || STORED_NBRS < 1) {
+	if err != nil || STORED_NBRS < 1 {
 		fmt.Printf("[Error] invalid storedNbrs: %s, %s\n", os.Args[2], usageStr)
 		os.Exit(0)
-	}	
+	}
 
+	BASE_URL := os.Args[3]
+	if BASE_URL == "" {
+		fmt.Printf("[Error] invalid baseURL (set to localhost if testing locally): %s, %s\n", os.Args[3], usageStr)
+		os.Exit(0)
+	}
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
@@ -78,7 +81,7 @@ func main() {
 	j, _ := json.Marshal(structs.JoinReq{
 		fmt.Sprintf("http://%s:%d", BASE_URL, port),
 	})
-	entry := "127.0.0.1:3000"
+	entry := "entry_node:3000"
 
 	fmt.Printf("Listening on port %d\n", port)
 	go func() {

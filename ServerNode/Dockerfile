@@ -10,5 +10,3 @@ COPY . .
 RUN go build -v
 
 EXPOSE 4000
-
-CMD ["./ServerNode"]

@@ -25,12 +25,12 @@ Start the system:
 ```
 Which will make the web frontend available at `localhost:3000`.
 
-For communication between nodes, the entry node is available at `entry_node:3000/path/to/thing` and the server nodes are available at `[ip_address]:4000/path/to/thing`.
+For communication between nodes, the entry node is available at `entry_node:3000/path/to/thing` and the server nodes are available at `server_node[NODE_ID]:[4000+NODE_ID]/path/to/thing`.
 Bring the system down:
 ```Bash
 docker compose -f "./docker-compose.yml" -p chord-network down
 ```
 Create a new server node:
 ```Bash
-docker run -itd --name [SERVER_NAME] --network chord-network_chord-network server_node
+./addNode.sh [NODE_ID] // must be an unused node
 ```

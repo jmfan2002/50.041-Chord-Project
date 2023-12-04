@@ -10,5 +10,3 @@ COPY . .
 RUN go build -v
 
 EXPOSE 3000
-
-CMD ["./EntryNode"]
