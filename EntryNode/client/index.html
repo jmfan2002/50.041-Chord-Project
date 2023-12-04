@@ -7,14 +7,8 @@
         <main>
             <h1>Chord Interface</h1>
             <section>
-                <h2>Status of system</h2>
-                <div id="cycleHealthPanel">
-                    <button onclick="makeCycleHealthCheck()">
-                        Make Cycle Health Check
-                    </button>
-                    <button onclick="getNodes()">Get nodes</button>
-                    <div id="nodeList"></div>
-                </div>
+                <h2>Status of system <span class="loader"></span></h2>
+                <div id="nodeList"></div>
             </section>
             <section id="handleData">
                 <h2>Handle data</h2>
@@ -44,16 +38,12 @@
                         </div>
                         <p id="dataOutput">Value:</p>
                     </div>
-                    <div>
-                        <h3>Get data</h3>
-                        <button onclick="getHashTable()">Get hash table</button>
-                        <div id="hashTable"></div>
-                    </div>
+                </div>
+                <div>
+                    <h2>Errors</h2>
+                    <p id="output"></p>
                 </div>
             </section>
-
-            <h2>Output</h2>
-            <p id="output">Output...</p>
         </main>
         <script src="/static/scripts/main.js"></script>
     </body>

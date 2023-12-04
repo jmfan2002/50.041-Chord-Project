@@ -28,6 +28,8 @@ func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request
 	resp, err := http.Get(serverAddress + "/api/health")
 	if err != nil {
 		fmt.Printf("An error occurred %s\n", err.Error())
+		util.WriteSuccessResponse(w, &HealthResBody{Val: "false"})
+		return
 	}
 
 	fmt.Printf("Request result: %s\n", resp.Status)

@@ -1,5 +1,7 @@
 const outputElem = document.getElementById('output');
 
+getNodes();
+
 async function makeHealthCheck(node) {
     console.log('Making health check');
 
@@ -133,17 +135,10 @@ async function getHashTable() {
 function createNodeComponent(node) {
     const nodeElem = document.createElement('div');
     const nodeText = document.createElement('span');
-    const healthBtn = document.createElement('button');
 
     nodeText.innerText = node;
-    healthBtn.innerText = 'Health';
 
     nodeElem.appendChild(nodeText);
-    nodeElem.appendChild(healthBtn);
-
-    healthBtn.onclick = () => {
-        makeHealthCheck(node);
-    };
 
     return nodeElem;
 }
@@ -171,6 +166,42 @@ async function handleResponse(res) {
         console.log(body);
     }
 }
+
+setInterval(async () => {
+    // Get node from the node container
+    document.querySelector('.loader').classList.remove('hidden');
+    const nodeList = document.getElementById('nodeList');
+    await getNodes();
+
+    // For each node call the health check on the node
+    for (let i = 0; i < nodeList.children.length; i++) {
+        const nodeTextElem = nodeList.children[i].querySelector('span');
+        const nodeAdress = nodeTextElem.innerText;
+        try {
+            const res = await fetch('/health?node=' + nodeAdress, {
+                method: 'GET',
+            });
+            if (!res.ok) {
+                const errorMessage = `Error: ${res.statusText}`;
+                console.error(errorMessage);
+                nodeTextElem.classList.remove('nodeUp');
+                nodeTextElem.classList.add('nodeDown');
+            } else {
+                const body = await res.json();
+                if (body?.val === 'Node is healthy') {
+                    nodeTextElem.classList.remove('nodeDown');
+                    nodeTextElem.classList.add('nodeUp');
+                } else {
+                    nodeTextElem.classList.remove('nodeUp');
+                    nodeTextElem.classList.add('nodeDown');
+                }
+            }
+        } catch (error) {
+            handleFetchError(error);
+        }
+    }
+    document.querySelector('.loader').classList.add('hidden');
+}, 10000);
 
 // Helper function to handle fetch errors
 function handleFetchError(error) {
