@@ -19,18 +19,16 @@ go run ServerNode
 go run EntryNode
 ```
 
-Start the system:
+### Start the system:
 ```Bash
-./start.sh [NUM_SERVERS]
+./start.sh [NUM_SERVERS] [TOLERANCE]
 ```
 Which will make the web frontend available at `localhost:3000`.
 
 For communication between nodes, the entry node is available at `entry_node:3000/path/to/thing` and the server nodes are available at `server_node[NODE_ID]:[4000+NODE_ID]/path/to/thing`.
-Bring the system down:
+
+### Create a new server node:
 ```Bash
-docker compose -f "./docker-compose.yml" -p chord-network down
+./addNode.sh [NODE_NAME] [NODE_ID] [TOLERANCE]
 ```
-Create a new server node:
-```Bash
-./addNode.sh [NODE_ID] // must be an unused node
-```
+Note that `NODE_ID` should be a number greater than the current number of nodes
