@@ -1,13 +1,5 @@
-if [ -z "$1" ]; then
-    echo "ERROR: Please pass server name, should be unique"
-    exit
-fi
-if [ -z "$2" ]; then
-    echo "ERROR: Please pass server number, should be higher than current server count"
-    exit
-fi
-if [ -z "$3" ]; then
-    echo "ERROR: Please pass tolerance number"
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+    echo "ERROR: Usage: ./addNode.sh [NODE_NAME] [NODE_ID] [TOLERANCE]"
     exit
 fi
 

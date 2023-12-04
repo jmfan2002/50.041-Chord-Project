@@ -1,9 +1,5 @@
-if [ -z "$1" ]; then
-    echo "ERROR: Please pass number of servers"
-    exit
-fi
-if [ -z "$2" ]; then
-    echo "ERROR: Please pass tolerance number"
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "ERROR: Usage: ./start.sh [NUM_SERVERS] [TOLERANCE]"
     exit
 fi
 
