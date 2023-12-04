@@ -34,18 +34,23 @@ async function getData() {
 
     try {
         const res = await fetch(`/data?key=${key}`, { method: 'GET' });
+        const outputElem = document.getElementById('dataOutput');
         if (res.ok) {
             try {
                 const data = await res.json();
-                const outputElem = document.getElementById('dataOutput');
                 if (!data?.value) {
-                    outputElem.innerText = 'No data found';
+                    outputElem.innerText = 'Value: No data found';
                 } else {
-                    outputElem.innerText = 'Value:' + data.value;
+                    outputElem.innerText = 'Value: ' + data.value;
                 }
             } catch (error) {
                 console.log(data);
             }
+        } else {
+            const errorMessage = `Error: ${res.statusText}`;
+            outputElem.innerText = errorMessage;
+            outputElem.innerText = 'Value: Something went wrong';
+            console.error(errorMessage);
         }
     } catch (error) {
         handleFetchError(error);
@@ -65,14 +70,24 @@ async function addData() {
     console.log('Data:', data);
 
     try {
-        const response = await fetch('/data', {
+        const res = await fetch('/data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
         });
-        await handleResponse(response);
+
+        if (!res.ok) {
+            const errorMessage = `Error: ${res.statusText}`;
+            outputElem.innerText = errorMessage;
+            console.error(errorMessage);
+        } else {
+            const body = await res.json();
+            const responseElem = document.querySelector('.response');
+            responseElem.innerText = 'Response: ' + body?.message;
+            console.log(body);
+        }
     } catch (error) {
         handleFetchError(error);
     }
