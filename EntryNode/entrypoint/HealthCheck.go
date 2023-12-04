@@ -13,7 +13,7 @@ type HealthResBody struct {
 }
 
 func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Health check called")
+	// fmt.Println("Health check called")
 
 	queryParams := r.URL.Query()
 	serverAddress := queryParams.Get("node")
