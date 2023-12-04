@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -22,6 +24,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "client/index.html")
 }
 
+func myFunc(entry entrypoint.EntryPoint) {
+	for {
+		time.Sleep(5 * time.Second)
+		entry.WriteState()
+	}
+}
+
 func main() {
 	// Command line flags
 	portPtr := flag.Int("port", 3000, "The port to serve the entrypoint on")
@@ -32,7 +41,14 @@ func main() {
 	k := *kPtr
 
 	// create entrypoint
-	entryServer := entrypoint.New(k)
+	var entryServer *entrypoint.EntryPoint
+	if _, err := os.Stat("entrypoint\\state.txt"); err == nil {
+		fmt.Println("state.txt exists, loading from file...")
+		entryServer = entrypoint.ReadState()
+	} else {
+		fmt.Println("state.txt does not exist, creating new entrypoint...")
+		entryServer = entrypoint.New(k)
+	}
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
@@ -58,6 +74,9 @@ func main() {
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Route undefined"))
 	})
+
+	//
+	go myFunc(*entryServer)
 
 	// start service
 	fmt.Printf("Listening on port %d\n", port)

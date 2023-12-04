@@ -21,7 +21,7 @@ func (entryPoint *EntryPoint) CycleHealth(w http.ResponseWriter, r *http.Request
 	// Checks if there are any nodes in the network
 	var resp *http.Response
 	var err error
-	for _, nodeAdress := range entryPoint.servers {
+	for _, nodeAdress := range entryPoint.Servers {
 		resp, err = http.Get(nodeAdress + "/api/cycleHealth/nil/")
 		if err == nil {
 			break

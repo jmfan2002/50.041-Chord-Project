@@ -14,7 +14,7 @@ func (entryPoint *EntryPoint) GetNodes(w http.ResponseWriter, r *http.Request) {
 	nodeList := []string{}
 
 	// Go through all nodes
-	for _, nodeURL := range entryPoint.servers {
+	for _, nodeURL := range entryPoint.Servers {
 		nodeList = append(nodeList, nodeURL)
 	}
 

@@ -21,10 +21,10 @@ func (entryPoint *EntryPoint) GetHashTable(w http.ResponseWriter, r *http.Reques
 	hashTable := []TableEntry{}
 
 	fmt.Println("Get hash table called")
-	fmt.Println("Getting hash table from", len(entryPoint.servers), "nodes")
+	fmt.Println("Getting hash table from", len(entryPoint.Servers), "nodes")
 
 	// Go through all nodes
-	for _, nodeURL := range entryPoint.servers {
+	for _, nodeURL := range entryPoint.Servers {
 		// Ask for hashT table
 		resp, err := http.Get(nodeURL + "/api/hashTable")
 		if err != nil {

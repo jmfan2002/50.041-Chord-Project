@@ -9,24 +9,25 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 type EntryPoint struct {
-	ipHashes []big.Int
+	IpHashes []big.Int
 
 	// Maps hashes as strings, to ips as strings
-	servers map[string]string
+	Servers map[string]string
 
 	// number of faults to tolerate
-	toleratedFaults int
+	ToleratedFaults int
 }
 
 func New(k int) *EntryPoint {
 	return &EntryPoint{
-		ipHashes:        make([]big.Int, 0),
-		servers:         make(map[string]string),
-		toleratedFaults: k,
+		IpHashes:        make([]big.Int, 0),
+		Servers:         make(map[string]string),
+		ToleratedFaults: k,
 	}
 }
 
@@ -34,6 +35,44 @@ type ChordSetValueReq struct {
 	Key   string
 	Value string
 	Nonce string
+}
+
+func (EntryPoint *EntryPoint) WriteState() {
+	file, err := os.Create("entrypoint\\state.txt")
+	if err != nil {
+		fmt.Println("Error creating state.txt")
+		return
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	if err := encoder.Encode(EntryPoint); err != nil {
+		fmt.Printf("Error encoding EntryPoint to state.txt file. %v\n", err)
+		return
+	}
+
+	fmt.Println("Done writing backup for entrypoint.")
+
+	return
+}
+
+func ReadState() *EntryPoint {
+	var data EntryPoint
+
+	file, err := os.Open("entrypoint\\state.txt")
+	if err != nil {
+		fmt.Println("Error opening state.txt file to read from, blank EntryPoint returned.")
+		return &EntryPoint{}
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&data); err != nil {
+		fmt.Println("Error decoding state.txt, blank EntryPoint returned.")
+		return &EntryPoint{}
+	}
+
+	return &data
 }
 
 func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
@@ -60,9 +99,9 @@ func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
 		h.Write([]byte(serverAddress))
 		z := big.NewInt(0)
 		z.SetBytes(h.Sum(nil))
-		for i := 0; i < len(entryPoint.ipHashes); i += 1 {
-			if entryPoint.ipHashes[i].Cmp(z) == 0 {
-				entryPoint.ipHashes = append(entryPoint.ipHashes[:i], entryPoint.ipHashes[i+1:]...)
+		for i := 0; i < len(entryPoint.IpHashes); i += 1 {
+			if entryPoint.IpHashes[i].Cmp(z) == 0 {
+				entryPoint.IpHashes = append(entryPoint.IpHashes[:i], entryPoint.IpHashes[i+1:]...)
 				break
 			}
 		}
@@ -72,7 +111,7 @@ func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
 }
 
 func (entryPoint *EntryPoint) setKVP(key string, val string) {
-	for i := 0; i <= entryPoint.toleratedFaults; i += 1 {
+	for i := 0; i <= entryPoint.ToleratedFaults; i += 1 {
 		go entryPoint.trySetKVP(key, strconv.Itoa(i), val)
 	}
 }
@@ -97,9 +136,9 @@ func (entryPoint *EntryPoint) tryGetKVP(serverAddress string, key string, nonce 
 		h.Write([]byte(serverAddress))
 		z := big.NewInt(0)
 		z.SetBytes(h.Sum(nil))
-		for i := 0; i < len(entryPoint.ipHashes); i += 1 {
-			if entryPoint.ipHashes[i].Cmp(z) == 0 {
-				entryPoint.ipHashes = append(entryPoint.ipHashes[:i], entryPoint.ipHashes[i+1:]...)
+		for i := 0; i < len(entryPoint.IpHashes); i += 1 {
+			if entryPoint.IpHashes[i].Cmp(z) == 0 {
+				entryPoint.IpHashes = append(entryPoint.IpHashes[:i], entryPoint.IpHashes[i+1:]...)
 				break
 			}
 		}
@@ -123,7 +162,7 @@ func (entryPoint *EntryPoint) tryGetKVP(serverAddress string, key string, nonce 
 func (entryPoint *EntryPoint) getKVP(key string) string {
 	in := make(chan Res)
 
-	for i := 0; i <= entryPoint.toleratedFaults; i += 1 {
+	for i := 0; i <= entryPoint.ToleratedFaults; i += 1 {
 		// Find the server that should have the key
 		serverAddress := entryPoint.Lookup(key, strconv.Itoa(i))
 		fmt.Printf("Getting %s from %s\n", key, serverAddress)
@@ -133,7 +172,7 @@ func (entryPoint *EntryPoint) getKVP(key string) string {
 
 	errors := make([]string, 0)
 	out := ""
-	for i := 0; i < entryPoint.toleratedFaults; i += 1 {
+	for i := 0; i < entryPoint.ToleratedFaults; i += 1 {
 		next := <-in
 		if !next.isError {
 			out = next.data
@@ -158,10 +197,10 @@ func (entryPoint *EntryPoint) Lookup(key string, nonce string) string {
 	z := big.NewInt(0)
 	z.SetBytes(h.Sum(nil))
 
-	serverIdx := util.BinarySearch(entryPoint.ipHashes, z) % len(entryPoint.ipHashes)
-	serverIpHash := entryPoint.ipHashes[serverIdx]
+	serverIdx := util.BinarySearch(entryPoint.IpHashes, z) % len(entryPoint.IpHashes)
+	serverIpHash := entryPoint.IpHashes[serverIdx]
 
-	serverIp := entryPoint.servers[serverIpHash.Text(16)]
+	serverIp := entryPoint.Servers[serverIpHash.Text(16)]
 
 	return serverIp
 }
@@ -191,21 +230,21 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	z.SetBytes(ipHash)
 
 	// Add server to internal tables
-	insertionPoint := util.BinarySearch(entryPoint.ipHashes, z)
+	insertionPoint := util.BinarySearch(entryPoint.IpHashes, z)
 
 	// ... actually, only if the entry doesn't already exists, though
-	if len(entryPoint.ipHashes) == 0 || entryPoint.ipHashes[(insertionPoint+len(entryPoint.ipHashes)-1)%len(entryPoint.ipHashes)].Cmp(z) != 0 {
-		if len(entryPoint.ipHashes) == insertionPoint {
-			entryPoint.ipHashes = append(entryPoint.ipHashes, *z)
+	if len(entryPoint.IpHashes) == 0 || entryPoint.IpHashes[(insertionPoint+len(entryPoint.IpHashes)-1)%len(entryPoint.IpHashes)].Cmp(z) != 0 {
+		if len(entryPoint.IpHashes) == insertionPoint {
+			entryPoint.IpHashes = append(entryPoint.IpHashes, *z)
 		} else {
-			entryPoint.ipHashes = append(
-				entryPoint.ipHashes[:insertionPoint+1],
-				entryPoint.ipHashes[insertionPoint:]...,
+			entryPoint.IpHashes = append(
+				entryPoint.IpHashes[:insertionPoint+1],
+				entryPoint.IpHashes[insertionPoint:]...,
 			)
-			entryPoint.ipHashes[insertionPoint] = *z
+			entryPoint.IpHashes[insertionPoint] = *z
 		}
 
-		entryPoint.servers[z.Text(16)] = ipAddress
+		entryPoint.Servers[z.Text(16)] = ipAddress
 		fmt.Printf("Added node at %s with hash %x\n", ipAddress, ipHash)
 	} else {
 		fmt.Printf("Readded node at %s with hash %x\n", ipAddress, ipHash)
@@ -213,11 +252,11 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 
 	// Debug printing
 	fmt.Println("Current node list:")
-	for _, item := range entryPoint.ipHashes {
-		fmt.Printf("\t%s->%s\n", item.Text(16), entryPoint.servers[item.Text(16)])
+	for _, item := range entryPoint.IpHashes {
+		fmt.Printf("\t%s->%s\n", item.Text(16), entryPoint.Servers[item.Text(16)])
 	}
 
-	numServers := len(entryPoint.ipHashes)
+	numServers := len(entryPoint.IpHashes)
 
 	// If first server, set successors list to self
 	/*
@@ -241,8 +280,8 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 
 	for predIndex != (insertionPoint+1+numServers)%numServers {
 		predIndex = (predIndex - 1 + numServers) % numServers
-		fmt.Printf("trying to contact %s\n", entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)])
-		predIp := entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)]
+		fmt.Printf("trying to contact %s\n", entryPoint.Servers[entryPoint.IpHashes[predIndex].Text(16)])
+		predIp := entryPoint.Servers[entryPoint.IpHashes[predIndex].Text(16)]
 
 		data, _ := json.Marshal(NewNodeReq{
 			predIp,
