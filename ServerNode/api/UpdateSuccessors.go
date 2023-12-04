@@ -106,6 +106,6 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("[Error] all descendants have failed UpdateSuccessors for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
-	util.WriteResponse(w, structs.SuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
-	// w.WriteHeader(http.StatusInternalServerError)
+	// util.WriteResponse(w, structs.SuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
+	w.WriteHeader(http.StatusInternalServerError)
 }
