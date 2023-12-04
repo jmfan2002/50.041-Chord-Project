@@ -17,14 +17,14 @@ type TableEntry struct {
 	Value      string `json:"value"`
 }
 
-func (entryPoint *EntryPoint) GetHashTable(w http.ResponseWriter, r *http.Request) {
+func (handler *Handler) GetHashTable(w http.ResponseWriter, r *http.Request) {
 	hashTable := []TableEntry{}
 
 	fmt.Println("Get hash table called")
-	fmt.Println("Getting hash table from", len(entryPoint.servers), "nodes")
+	fmt.Println("Getting hash table from", len(handler.EntryPoint.servers), "nodes")
 
 	// Go through all nodes
-	for _, nodeURL := range entryPoint.servers {
+	for _, nodeURL := range handler.EntryPoint.servers {
 		// Ask for hashT table
 		resp, err := http.Get(nodeURL + "/api/hashTable")
 		if err != nil {

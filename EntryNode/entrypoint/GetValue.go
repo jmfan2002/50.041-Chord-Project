@@ -12,12 +12,12 @@ type GetValueResBody struct {
 	Value string `json:"value"`
 }
 
-func (entryPoint *EntryPoint) GetValue(w http.ResponseWriter, r *http.Request) {
+func (handler *Handler) GetValue(w http.ResponseWriter, r *http.Request) {
 	// Get key from request
 	queryParams := r.URL.Query()
 
 	key := queryParams.Get("key")
-	val := entryPoint.getKVP(key)
+	val := handler.EntryPoint.getKVP(key)
 
 	response := &GetValueResBody{}
 

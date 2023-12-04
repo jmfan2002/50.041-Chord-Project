@@ -10,11 +10,11 @@ type GetNodesResBody struct {
 	Nodes []string `json:"nodes"`
 }
 
-func (entryPoint *EntryPoint) GetNodes(w http.ResponseWriter, r *http.Request) {
+func (handler *Handler) GetNodes(w http.ResponseWriter, r *http.Request) {
 	nodeList := []string{}
 
 	// Go through all nodes
-	for _, nodeURL := range entryPoint.servers {
+	for _, nodeURL := range handler.EntryPoint.servers {
 		nodeList = append(nodeList, nodeURL)
 	}
 

@@ -32,7 +32,7 @@ func main() {
 	k := *kPtr
 
 	// create entrypoint
-	entryServer := entrypoint.New(k)
+	handler := entrypoint.NewHandler(k)
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
@@ -40,16 +40,16 @@ func main() {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./client/static"))))
 
 	// expose endpoints
-	router.HandleFunc("/health", entryServer.HealthCheck).Methods("GET")
-	router.HandleFunc("/cycleHealth", entryServer.CycleHealth).Methods("GET")
+	router.HandleFunc("/health", handler.HealthCheck).Methods("GET")
+	router.HandleFunc("/cycleHealth", handler.CycleHealth).Methods("GET")
 
-	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
-	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")
-	router.HandleFunc("/data/hashTable", entryServer.GetHashTable).Methods("GET")
+	router.HandleFunc("/data", handler.GetValue).Methods("GET")
+	router.HandleFunc("/data", handler.SetValue).Methods("POST")
+	router.HandleFunc("/data/hashTable", handler.GetHashTable).Methods("GET")
 
-	router.HandleFunc("/join", entryServer.AddNode).Methods("POST")
+	router.HandleFunc("/join", handler.AddNode).Methods("POST")
 
-	router.HandleFunc("/nodes", entryServer.GetNodes).Methods("GET")
+	router.HandleFunc("/nodes", handler.GetNodes).Methods("GET")
 
 	// Serve webpage
 	router.HandleFunc("/", indexHandler)
