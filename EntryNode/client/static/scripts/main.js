@@ -152,7 +152,7 @@ function createNodeComponent(node) {
     const nodeText = document.createElement('span');
 
     nodeText.innerText = node;
-
+    nodeText.classList.add('nodeStatus');
     nodeElem.appendChild(nodeText);
 
     return nodeElem;
