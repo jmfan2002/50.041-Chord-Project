@@ -22,7 +22,7 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 	var reqBody = NewNodeReq{}
 	err := util.ReadBody(r.Body, &reqBody)
 	if err != nil {
-		fmt.Println("Error decoding request")
+		fmt.Printf("Error decoding request, %s\n", err)
 		return
 	}
 

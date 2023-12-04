@@ -19,8 +19,8 @@ import (
 
 func main() {
 	// Parse arguments
-	usageStr := "usage: go run main.go <port> <storedNbrs> <baseURL>"
-	if len(os.Args) < 4 {
+	usageStr := "usage: go run main.go <port> <storedNbrs> <baseURL> <entrypoint>"
+	if len(os.Args) < 5 {
 		fmt.Printf("[Error] port or storedNbrs or baseURL missing. %s\n", usageStr)
 		os.Exit(0)
 	}
@@ -42,12 +42,18 @@ func main() {
 		os.Exit(0)
 	}
 
+	ENTRYPOINT := os.Args[4]
+	if ENTRYPOINT == "" {
+		fmt.Printf("[Error] invalid baseURL entrypoint url (set to localhost if testing locally): %s, %s\n", os.Args[4], usageStr)
+		os.Exit(0)
+	}
+
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
 	// create a handler that stores and updates our node information
 	handler := api.NewHandler(fmt.Sprintf("http://%s:%d", BASE_URL, port), STORED_NBRS)
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
-	handler.NodeInfo.NodeHash = fmt.Sprintf("%s", util.Sha256String(fmt.Sprintf("http://%s:%d", BASE_URL, port))) // DEBUG: REMOVE WHEN DONE
+	handler.NodeInfo.NodeHash = util.Sha256String(fmt.Sprintf("http://%s:%d", BASE_URL, port)) // DEBUG: REMOVE WHEN DONE
 
 	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
@@ -81,14 +87,14 @@ func main() {
 	j, _ := json.Marshal(structs.JoinReq{
 		fmt.Sprintf("http://%s:%d", BASE_URL, port),
 	})
-	entry := "entry_node:3000"
+	// entry := "entry_node:3000"
 
 	fmt.Printf("Listening on port %d\n", port)
 	go func() {
 		fmt.Println("[Debug]")
 		time.Sleep(1 * time.Second)
 		fmt.Println("Waking up, notifying entry point")
-		http.Post("http://"+entry+"/join", "application/json",
+		http.Post(fmt.Sprintf("http://%s", ENTRYPOINT)+"/join", "application/json",
 			bytes.NewBuffer(j))
 		fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 	}()

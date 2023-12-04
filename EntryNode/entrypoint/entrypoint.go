@@ -182,7 +182,7 @@ type NewNodeReq struct {
 	// Which node the reuest "started" from, since it's passed down the ring
 	Origin string
 	// List of ndoes that have viewed this message
-	WiewList []string
+	ViewList []string
 	// The ip of the new node
 	NewNode string
 }
@@ -242,32 +242,21 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 
 		_, err := entryPoint.requester.SendRequest(predIp, "/api/successors/nil/0", http.MethodPatch, nil, util.REQUEST_TIMEOUT)
 
-		// req, err := http.NewRequest(
-		// 	http.MethodPatch,
-		// 	predIp+"/api/successors/nil/0",
-		// 	bytes.NewBuffer([]byte{}),
-		// )
-		// req.Header.Set("Content-Type", "application/json")
-
-		// // create HTTP client and execute request
-		// client := &http.Client{}
-		// _, err = client.Do(req)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
-		data, _ := json.Marshal(NewNodeReq{
+		resp, err := entryPoint.requester.SendRequest(
 			predIp,
-			[]string{},
-			ipAddress,
-		})
-		resp, err := http.Post(
-			predIp+"/api/join",
-			"application/json",
-			bytes.NewBuffer(data),
-		)
-
+			"/api/join",
+			http.MethodPost,
+			NewNodeReq{
+				predIp,
+				[]string{},
+				ipAddress,
+			},
+			util.REQUEST_TIMEOUT)
 		if err != nil || resp.StatusCode != http.StatusOK {
 			fmt.Println("Error when joining node!")
 		} else {
