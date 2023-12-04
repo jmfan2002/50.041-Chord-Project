@@ -2,6 +2,8 @@ package entrypoint
 
 import (
 	"EntryNode/util"
+	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -17,10 +19,14 @@ func (entryPoint *EntryPoint) GetValue(w http.ResponseWriter, r *http.Request) {
 	key := queryParams.Get("key")
 	val := entryPoint.getKVP(key)
 
-	sampleStruct := GetValueResBody{
-		Key:   key,
-		Value: val,
+	response := &GetValueResBody{}
+
+	err := json.Unmarshal([]byte(val), response)
+	if err != nil {
+		fmt.Println("Error parsing request body")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	util.WriteSuccessResponse(w, &sampleStruct)
+	util.WriteSuccessResponse(w, &response)
 }
