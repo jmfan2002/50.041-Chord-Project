@@ -2,9 +2,7 @@ package entrypoint
 
 import (
 	"EntryNode/util"
-	"bytes"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -44,20 +42,18 @@ func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
 	serverAddress := entryPoint.Lookup(key, nonce)
 	fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
 
-	j, err := json.Marshal(ChordSetValueReq{
-		key,
-		val,
-		nonce,
-	})
-	if err != nil {
-		fmt.Println("Error creating request body")
-		return
-	}
-
-	res, err := http.Post(serverAddress+"/api",
-		"application/json",
-		bytes.NewBuffer(j),
+	res, err := entryPoint.requester.SendRequest(
+		serverAddress,
+		"/api",
+		http.MethodPost,
+		ChordSetValueReq{
+			key,
+			val,
+			nonce,
+		},
+		util.REQUEST_TIMEOUT,
 	)
+
 	if err != nil {
 		fmt.Printf("An error occurred %s\n", err.Error())
 		h := sha256.New()
@@ -91,8 +87,15 @@ type Res struct {
 }
 
 func (entryPoint *EntryPoint) tryGetKVP(serverAddress string, key string, nonce string, out chan Res) {
-	resp, err := http.Get(
-		fmt.Sprintf("%s/api/%s/%s", serverAddress, key, nonce))
+
+	resp, err := entryPoint.requester.SendRequest(
+		serverAddress,
+		fmt.Sprintf("/api/%s/%s", key, nonce),
+		http.MethodGet,
+		nil,
+		util.REQUEST_TIMEOUT,
+	)
+
 	if err != nil {
 		fmt.Printf("An error occurred %s\n", err.Error())
 
