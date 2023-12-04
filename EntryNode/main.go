@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -22,6 +24,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "client/index.html")
 }
 
+func periodicWrite(entry entrypoint.EntryPoint) {
+	for {
+		time.Sleep(5 * time.Second)
+		entry.WriteState()
+	}
+}
+
 func main() {
 	// Command line flags
 	portPtr := flag.Int("port", 3000, "The port to serve the entrypoint on")
@@ -32,7 +41,14 @@ func main() {
 	k := *kPtr
 
 	// create entrypoint
-	handler := entrypoint.NewHandler(k)
+	var entryServer *entrypoint.EntryPoint
+	if _, err := os.Stat("entrypoint\\state.txt"); err == nil {
+		fmt.Println("state.txt exists, loading from file...")
+		entryServer = entrypoint.ReadState()
+	} else {
+		fmt.Println("state.txt does not exist, creating new entrypoint...")
+		entryServer = entrypoint.New(k)
+	}
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
@@ -40,16 +56,16 @@ func main() {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./client/static"))))
 
 	// expose endpoints
-	router.HandleFunc("/health", handler.HealthCheck).Methods("GET")
-	router.HandleFunc("/cycleHealth", handler.CycleHealth).Methods("GET")
+	router.HandleFunc("/health", entryServer.HealthCheck).Methods("GET")
+	router.HandleFunc("/cycleHealth", entryServer.CycleHealth).Methods("GET")
 
-	router.HandleFunc("/data", handler.GetValue).Methods("GET")
-	router.HandleFunc("/data", handler.SetValue).Methods("POST")
-	router.HandleFunc("/data/hashTable", handler.GetHashTable).Methods("GET")
+	router.HandleFunc("/data", entryServer.GetValue).Methods("GET")
+	router.HandleFunc("/data", entryServer.SetValue).Methods("POST")
+	router.HandleFunc("/data/hashTable", entryServer.GetHashTable).Methods("GET")
 
-	router.HandleFunc("/join", handler.AddNode).Methods("POST")
+	router.HandleFunc("/join", entryServer.AddNode).Methods("POST")
 
-	router.HandleFunc("/nodes", handler.GetNodes).Methods("GET")
+	router.HandleFunc("/nodes", entryServer.GetNodes).Methods("GET")
 
 	// Serve webpage
 	router.HandleFunc("/", indexHandler)
@@ -58,6 +74,8 @@ func main() {
 	router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Route undefined"))
 	})
+
+	go periodicWrite(*entryServer)
 
 	// start service
 	fmt.Printf("Listening on port %d\n", port)

@@ -15,14 +15,14 @@ type SetValueResBody struct {
 	Message string `json:"message"`
 }
 
-func (handler *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
+func (entryPoint *EntryPoint) SetValue(w http.ResponseWriter, r *http.Request) {
 	// Get key and value from request
 	var reqBody SetValueReqBody
 	fmt.Println("Got data set")
 
 	util.ReadRequestBody(w, r, &reqBody)
 
-	handler.EntryPoint.setKVP(reqBody.Key, reqBody.Value)
+	entryPoint.setKVP(reqBody.Key, reqBody.Value)
 
 	response := SetValueResBody{
 		Message: reqBody.Key + " set to " + reqBody.Value,

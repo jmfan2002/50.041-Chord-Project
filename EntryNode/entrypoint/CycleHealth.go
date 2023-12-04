@@ -16,12 +16,12 @@ type CycleHealthResponse struct {
 	CycleSize int `json:"cycleSize"`
 }
 
-func (handler *Handler) CycleHealth(w http.ResponseWriter, r *http.Request) {
+func (entryPoint *EntryPoint) CycleHealth(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Cycling health check")
 	// Checks if there are any nodes in the network
 	var resp *http.Response
 	var err error
-	for _, nodeAdress := range handler.EntryPoint.servers {
+	for _, nodeAdress := range entryPoint.Servers {
 		resp, err = http.Get(nodeAdress + "/api/cycleHealth/nil/")
 		if err == nil {
 			break

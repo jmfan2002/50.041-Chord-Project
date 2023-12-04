@@ -12,7 +12,7 @@ type HealthResBody struct {
 	Val string `json:"val"`
 }
 
-func (handler *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Health check called")
 
 	queryParams := r.URL.Query()
