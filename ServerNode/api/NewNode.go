@@ -10,7 +10,7 @@ import (
 )
 
 type NewNodeReq struct {
-	// Which node the reuest "started" from, since it's passed down the ring
+	// Which node the request "started" from, since it's passed down the ring
 	Origin string
 	// List of ndoes that have viewed this message
 	ViewList []string

@@ -18,13 +18,12 @@ import (
 )
 
 func main() {
-	STORED_NBRS := 10
 	BASE_URL := "localhost" // "10.12.103.97"
 
 	// Parse arguments
-	usageStr := "usage: go run main.go <port>"
-	if len(os.Args) == 1 {
-		fmt.Printf("[Error] port missing. %s\n", usageStr)
+	usageStr := "usage: go run main.go <port> <storedNbrs>"
+	if len(os.Args) == 2 {
+		fmt.Printf("[Error] port or storedNbrs missing. %s\n", usageStr)
 		os.Exit(0)
 	}
 	port, err := strconv.Atoi(os.Args[1])
@@ -32,6 +31,13 @@ func main() {
 		fmt.Printf("[Error] invalid port: %s, %s\n", os.Args[1], usageStr)
 		os.Exit(0)
 	}
+
+	STORED_NBRS, err := strconv.Atoi(os.Args[2])
+	if (err != nil || STORED_NBRS < 1) {
+		fmt.Printf("[Error] invalid storedNbrs: %s, %s\n", os.Args[2], usageStr)
+		os.Exit(0)
+	}	
+
 
 	// create a new router
 	router := mux.NewRouter().StrictSlash(true)
