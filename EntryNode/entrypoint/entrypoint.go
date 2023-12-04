@@ -20,6 +20,9 @@ type EntryPoint struct {
 
 	// number of faults to tolerate
 	toleratedFaults int
+
+	// used to send heartbeat requests
+	requester util.HeartbeatRequester
 }
 
 func New(k int) *EntryPoint {
@@ -27,6 +30,7 @@ func New(k int) *EntryPoint {
 		ipHashes:        make([]big.Int, 0),
 		servers:         make(map[string]string),
 		toleratedFaults: k,
+		requester:       util.HeartbeatRequester{},
 	}
 }
 
@@ -227,22 +231,6 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 
 	numServers := len(entryPoint.ipHashes)
 
-	// If first server, set successors list to self
-	/*
-		if numServers == 1 {
-			data, _ := json.Marshal(Successors{
-				Successors: []string{ipAddress},
-			})
-			_, _ = http.Post(
-				ipAddress+"/api/successors",
-				"application/json",
-				bytes.NewBuffer(data),
-			)
-
-			return
-		}
-	*/
-
 	// Node join
 	// Try to find the predecessor to the new node, and use it to inform the new node.
 	predIndex := insertionPoint
@@ -252,16 +240,18 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 		fmt.Printf("trying to contact %s\n", entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)])
 		predIp := entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)]
 
-		req, err := http.NewRequest(
-			http.MethodPatch,
-			predIp+"/api/successors/nil/0",
-			bytes.NewBuffer([]byte{}),
-		)
-		req.Header.Set("Content-Type", "application/json")
+		_, err := entryPoint.requester.SendRequest(predIp, "/api/successors/nil/0", http.MethodPatch, nil, util.REQUEST_TIMEOUT)
 
-		// create HTTP client and execute request
-		client := &http.Client{}
-		_, err = client.Do(req)
+		// req, err := http.NewRequest(
+		// 	http.MethodPatch,
+		// 	predIp+"/api/successors/nil/0",
+		// 	bytes.NewBuffer([]byte{}),
+		// )
+		// req.Header.Set("Content-Type", "application/json")
+
+		// // create HTTP client and execute request
+		// client := &http.Client{}
+		// _, err = client.Do(req)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -283,75 +273,5 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 		} else {
 			return
 		}
-
-		/*
-			// 1. get the successors (GetSuccessors) of the node before where it belongs
-			fmt.Println("Step 1")
-			var succOfPred Successors
-			predIp := entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)]
-			// get successors of the preceding node
-			resp, err := http.Get(predIp + "/api/successors")
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			bodyBytes, err := io.ReadAll(resp.Body)
-			if err != nil {
-				fmt.Println("Error reading request body")
-				return
-			}
-			err = json.Unmarshal(bodyBytes, &succOfPred)
-
-			// 2. set the successors of the new node to this list (SetSuccessors)
-			fmt.Println("Step 2")
-			data, err := json.Marshal(succOfPred)
-			resp, err = http.Post(
-				ipAddress+"/api/successors",
-				"application/json",
-				bytes.NewBuffer(data),
-			)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			// 3. set the successors of the old node to [newNode, oldSuccessors...]
-			fmt.Println("Step 3")
-			succOfPred.Successors = append([]string{ipAddress}, succOfPred.Successors...)
-			data, err = json.Marshal(succOfPred)
-			resp, err = http.Post(
-				predIp+"/api/successors",
-				"application/json",
-				bytes.NewBuffer(data),
-			)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			// 4. call UpdateSuccessors on any node in the system (it will be safest to call it on the node directly before, but it doesn't really matter)
-			fmt.Println("Step 4")
-			_, err = http.NewRequest(
-				http.MethodPatch,
-				predIp+"/api/successors/nil/0",
-				bytes.NewBuffer(data),
-			)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			// 5. call ReassignEntries on the node directly preceding the new node. this will move the necessary values to the new node
-			fmt.Println("Step 5")
-			_, err = http.NewRequest(
-				http.MethodPatch,
-				predIp+"/api/entries",
-				bytes.NewBuffer([]byte{}),
-			)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-		*/
 	}
 }
