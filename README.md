@@ -21,7 +21,7 @@ go run EntryNode
 
 Start the system:
 ```Bash
-./start.sh [NUM_SERVERS]
+./start.sh [NUM_SERVERS] [TOLERANCE]
 ```
 Which will make the web frontend available at `localhost:3000`.
 
@@ -32,5 +32,5 @@ docker compose -f "./docker-compose.yml" -p chord-network down
 ```
 Create a new server node:
 ```Bash
-./addNode.sh [NODE_ID] // must be an unused node
+./addNode.sh [NODE_NAME] [NODE_ID] [TOLERANCE]
 ```
