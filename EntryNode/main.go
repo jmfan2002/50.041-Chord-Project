@@ -34,11 +34,11 @@ func periodicWrite(entry entrypoint.EntryPoint) {
 func main() {
 	// Command line flags
 	portPtr := flag.Int("port", 3000, "The port to serve the entrypoint on")
-	kPtr := flag.Int("k", 1, "The number of Chord node faults to tolerate. We attempt to store k+1 keys in the network.")
+	kPtr := flag.Int("k", 1, "The number of Chord nodes to save values to. This allows for k-1 fault tolerance")
 	flag.Parse()
 
 	port := *portPtr
-	k := *kPtr
+	numFaults := *kPtr - 1
 
 	// create entrypoint
 	var entryServer *entrypoint.EntryPoint
@@ -47,7 +47,7 @@ func main() {
 		entryServer = entrypoint.ReadState()
 	} else {
 		fmt.Println("state.txt does not exist, creating new entrypoint...")
-		entryServer = entrypoint.New(k)
+		entryServer = entrypoint.New(numFaults)
 	}
 
 	// create a new router

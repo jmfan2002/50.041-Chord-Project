@@ -54,10 +54,17 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 	// ... otherwise, we need to be a little smarter about inserting
 	insertionPoint := 0
 
+	ourSHA := util.Sha256String(h.NodeInfo.NodeUrl)
+	newSHA := util.Sha256String(reqBody.NewNode)
+
+	if ourSHA > newSHA {
+		insertionPoint = len(h.NodeInfo.SuccessorArray)
+	}
+
 	for i := 0; i < len(h.NodeInfo.SuccessorArray); i += 1 {
-		if util.Sha256String(h.NodeInfo.SuccessorArray[i]) <
-			util.Sha256String(reqBody.NewNode) && !((util.Sha256String(h.NodeInfo.NodeUrl) < util.Sha256String(reqBody.NewNode)) &&
-			(util.Sha256String(h.NodeInfo.SuccessorArray[i]) < util.Sha256String(h.NodeInfo.NodeUrl))) {
+		if (util.Sha256String(h.NodeInfo.SuccessorArray[i]) < newSHA) &&
+			!((ourSHA < newSHA) &&
+				(util.Sha256String(h.NodeInfo.SuccessorArray[i]) < ourSHA)) {
 			insertionPoint = i + 1
 		}
 	}
@@ -75,7 +82,7 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 			bytes.NewBuffer(data),
 		)
 		if err == nil {
-			fmt.Println("Successfully continuing")
+			fmt.Printf("Successfully passing on to %s\n", h.NodeInfo.SuccessorArray[0])
 			break
 		}
 		// If we don't get a response from our successor...
@@ -110,7 +117,8 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 			append(
 				h.NodeInfo.SuccessorArray[:insertionPoint],
 				append(
-					[]string{reqBody.NewNode}, h.NodeInfo.SuccessorArray[insertionPoint:]...,
+					[]string{reqBody.NewNode},
+					h.NodeInfo.SuccessorArray[insertionPoint:]...,
 				)...,
 			)
 	} else {

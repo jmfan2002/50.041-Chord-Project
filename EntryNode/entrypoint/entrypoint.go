@@ -285,9 +285,6 @@ func (EntryPoint *EntryPoint) WriteState() {
 		return
 	}
 
-	fmt.Println(EntryPoint)
-	fmt.Println(EntryPoint.IpHashes)
-
 	fmt.Println("Done writing backup for entrypoint.")
 }
 
@@ -308,6 +305,7 @@ func ReadState() *EntryPoint {
 	}
 
 	// Unfortunately, go's bigInt is garbage, so we need to regenerate the array on our own
+	data.IpHashes = make([]big.Int, 0)
 	for key := range data.Servers {
 		z := big.NewInt(0)
 		z.SetString(key, 16)
@@ -321,8 +319,6 @@ func ReadState() *EntryPoint {
 				data.IpHashes[insertion:]...,
 			)...)
 	}
-
-	fmt.Println(data)
 
 	return &data
 }
