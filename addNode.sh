@@ -13,7 +13,7 @@ services:
   server_nodeSERVER_ID:
     build: ./ServerNode
     image: server_node
-    entrypoint: ["./ServerNode", "PORT_NUM", "TOLERANCE", "server_nodeSERVER_ID"]
+    entrypoint: ["./ServerNode", "PORT_NUM", "TOLERANCE", "server_nodeSERVER_ID", "entry_node:3000"]
     ports:
       - "PORT_NUM:PORT_NUM"
     deploy:
