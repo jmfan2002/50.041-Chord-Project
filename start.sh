@@ -3,7 +3,7 @@ if [ -z "$1" ] || [ -z "$2" ]; then
     exit
 fi
 
-TOLERANCE=$2
+TOLERANCE=$(($2+1))
 
 # set up docker compose string
 NUM_SERVERS=$1

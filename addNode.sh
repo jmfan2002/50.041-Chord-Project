@@ -5,7 +5,7 @@ fi
 
 SERVER_NAME=$1
 SERVER_ID=$2
-TOLERANCE=$3
+TOLERANCE=$(($3+1))
 
 DOCKER_TEMPLATE='
 version: "3.4"
