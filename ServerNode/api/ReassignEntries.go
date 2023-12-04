@@ -8,7 +8,7 @@ import (
 )
 
 func (h *Handler) ReassignEntries(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[Debug] ReassignEntries called\n")
+	// fmt.Printf("[Msg] ReassignEntries called\n")
 	// First, copy over values
 	previousEntries := make([]structs.EntryResponse, 0)
 	for _, val := range h.NodeInfo.NodeContents {
@@ -20,7 +20,7 @@ func (h *Handler) ReassignEntries(w http.ResponseWriter, r *http.Request) {
 
 	// Finally, call insert on each entry
 	for _, entry := range previousEntries {
-		fmt.Printf("[Debug] re-inserting entry %s\n", entry)
+		// fmt.Printf("[Debug] re-inserting entry %s\n", entry)
 
 		// Check the next descendant
 		for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
@@ -39,7 +39,7 @@ func (h *Handler) ReassignEntries(w http.ResponseWriter, r *http.Request) {
 				return
 
 			} else {
-				fmt.Printf("[Debug] successfully inserted %s\n", entry)
+				// fmt.Printf("[Debug] successfully inserted %s\n", entry)
 				break
 			}
 		}

@@ -15,7 +15,7 @@ func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNode
 	// Case 1: standard case
 	// Case 2: current node has looped back around to 0 and entry belongs in the node with lowest hash
 	if h.NodeInfo.NodeHash > EntryHash || h.NodeInfo.NodeHash < PreviousNodeHash && EntryHash > PreviousNodeHash {
-		fmt.Printf("[Debug] Node %s is the correct destination for hash %s \n", h.NodeInfo.NodeUrl, EntryHash)
+		// fmt.Printf("[Msg] Node %s is the correct destination for hash %s \n", h.NodeInfo.NodeUrl, EntryHash)
 		entry, ok := h.NodeInfo.NodeContents[EntryHash]
 		if !ok {
 			util.WriteResponse(w, nil, http.StatusNotFound)
@@ -27,9 +27,9 @@ func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNode
 	}
 
 	// Not the correct node, keep searching -------------------------------------------
-	fmt.Printf("[Debug] continuing on the loop\n")
+	// fmt.Printf("[Debug] continuing on the loop\n")
 	for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
-		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
+		// fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Check the next descendant
 		requestEndpoint := fmt.Sprintf("/api/%s/%s/%s", Key, Nonce, h.NodeInfo.NodeHash)
@@ -61,6 +61,6 @@ func (h *Handler) GetValueHelper(w http.ResponseWriter, Key, Nonce, PreviousNode
 		}
 	}
 
-	fmt.Printf("[Error] all descendants have failed for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
+	fmt.Printf("[Error] all descendants have failed GetValueHelper for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
 	w.WriteHeader(http.StatusInternalServerError)
 }

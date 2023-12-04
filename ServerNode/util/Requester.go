@@ -30,7 +30,7 @@ func (r *BasicRequester) SendRequest(baseUrl, endpoint, httpMethod string, conte
 type HeartbeatRequester struct{}
 
 func (r *HeartbeatRequester) SendRequest(baseUrl, endpoint, httpMethod string, contents interface{}, timeoutMs int) (*http.Response, error) {
-	fmt.Printf("[Debug] sending %s request to: %s%s with heartbeat timeout %d\n", httpMethod, baseUrl, endpoint, timeoutMs)
+	// fmt.Printf("[Debug] sending %s request to: %s%s with heartbeat timeout %d\n", httpMethod, baseUrl, endpoint, timeoutMs)
 
 	// Create a new context that can be cancelled
 	ctx, cancel := context.WithCancel(context.Background())
@@ -58,14 +58,14 @@ func (r *HeartbeatRequester) SendRequest(baseUrl, endpoint, httpMethod string, c
 
 	// Send health checks at interval of timeoutMs in a goroutine to allow us to progress to main request
 	go func() {
-		fmt.Printf("[Htbt] starting heartbeat checks\n")
+		// fmt.Printf("[Htbt] starting heartbeat checks\n")
 		ticker := time.NewTicker(time.Duration(timeoutMs) * time.Millisecond)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
 				if ctx.Err() != nil {
-					fmt.Println("[Htbt] Heartbeat cancelled")
+					// fmt.Println("[Htbt] Heartbeat cancelled")
 					return
 				}
 
@@ -75,16 +75,16 @@ func (r *HeartbeatRequester) SendRequest(baseUrl, endpoint, httpMethod string, c
 
 				healthResp, healthErr := client.Get(baseUrl + "/api/health")
 				if healthErr != nil || healthResp.StatusCode != http.StatusOK {
-					fmt.Printf("[Htbt] Health check failed, canceling the request. err: %s\n", healthErr)
+					// fmt.Printf("[Htbt] Health check failed, canceling the request. err: %s\n", healthErr)
 					cancel()
 					return
 				} else {
-					fmt.Println("[Htbt] heartbeat health check successful!")
+					// fmt.Println("[Htbt] heartbeat health check successful!")
 				}
 
 			case <-ctx.Done():
 				// If the context is done, stop the checks
-				fmt.Printf("[Htbt] stopping heartbeat checks\n")
+				// fmt.Printf("[Htbt] stopping heartbeat checks\n")
 				return
 			}
 		}

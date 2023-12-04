@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Health check called")
+	// fmt.Println("Health check called")
 
 	sampleStruct := structs.SampleStruct{
 		Val: "Node is healthy",

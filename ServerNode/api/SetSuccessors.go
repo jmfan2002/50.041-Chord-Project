@@ -16,6 +16,6 @@ func (h *Handler) SetSuccessors(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("[Debug] setting successors to %s\n", newSuccessors.Successors)
+	// fmt.Printf("[Msg] setting successors to %s\n", newSuccessors.Successors)
 	h.NodeInfo.SuccessorArray = newSuccessors.Successors
 }

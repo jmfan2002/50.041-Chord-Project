@@ -12,7 +12,7 @@ import (
 )
 
 func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[Debug] UpdateSuccessors called\n")
+	// fmt.Printf("[Msg] UpdateSuccessors called\n")
 
 	// Parse variables from url -------------------------------------------
 	StartingNodeHash := mux.Vars(r)["StartingNodeHash"]
@@ -26,7 +26,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 
 	// We've fully overlapped, return -------------------------------------------
 	if CurrentOverlap == h.NodeInfo.StoredNbrs-1 {
-		fmt.Printf("[Debug] overlap complete, returning! \n")
+		// fmt.Printf("[Debug] overlap complete, returning! \n")
 		util.WriteResponse(w, structs.SuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
 		return
 	}
@@ -38,7 +38,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 
 	// We've cycled back, start on overlap -------------------------------------------
 	if StartingNodeHash != "nil" && CurrentOverlap == 0 && h.NodeInfo.NodeHash == StartingNodeHash {
-		fmt.Printf("[Debug] cycle complete, starting on overlap \n")
+		// fmt.Printf("[Debug] cycle complete, starting on overlap \n")
 		CurrentOverlap++
 	}
 	if StartingNodeHash == "nil" {
@@ -46,12 +46,12 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if CurrentOverlap == 0 {
-		fmt.Printf("[Debug] successor array starts as: %s\n", h.NodeInfo.SuccessorArray)
+		// fmt.Printf("[Debug] successor array starts as: %s\n", h.NodeInfo.SuccessorArray)
 	}
 
 	// Check descendants -------------------------------------------
 	for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
-		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
+		// fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Request next descendent
 		requestEndpoint := fmt.Sprintf("/api/successors/%s/%d", StartingNodeHash, CurrentOverlap)
@@ -59,7 +59,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			// Descendent is unresponsive
-			fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
+			// fmt.Printf("[Debug] child %s is not healthy, trying next\n", h.NodeInfo.SuccessorArray[i])
 
 		} else if resp.StatusCode != http.StatusOK {
 			// Descendent returns a bad status code, return
@@ -90,7 +90,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 			// If it's not an overlap, update array
 			if CurrentOverlap == 0 {
 				h.NodeInfo.SuccessorArray = util.CopySliceString(updateResp.Successors)
-				fmt.Printf("[Debug] successor array is now: %s\n", h.NodeInfo.SuccessorArray)
+				// fmt.Printf("[Debug] successor array is now: %s\n", h.NodeInfo.SuccessorArray)
 			}
 
 			// Regardless, return array of current node and previous k - 1
@@ -99,12 +99,13 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 				updateResp.Successors = updateResp.Successors[:h.NodeInfo.StoredNbrs-1]
 			}
 
-			fmt.Printf("[Debug] returning successor array: %s\n", updateResp.Successors)
+			// fmt.Printf("[Debug] returning successor array: %s\n", updateResp.Successors)
 			util.WriteResponse(w, updateResp, http.StatusOK)
 			return
 		}
 	}
 
-	fmt.Printf("[Error] all descendants have failed for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
-	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Printf("[Error] all descendants have failed UpdateSuccessors for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
+	util.WriteResponse(w, structs.SuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
+	// w.WriteHeader(http.StatusInternalServerError)
 }

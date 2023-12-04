@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("[Debug] Set value called")
+	// fmt.Println("[Msg] Set value called")
 
 	// Read values from request -------------------------------------------
 	reqBody := &structs.SetValueReqBody{}
@@ -22,14 +22,14 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if reqBody.PreviousNodeHash == "" {
-		fmt.Println("[Debug] Called with no PreviousNodeHash")
+		// fmt.Println("[Debug] Called with no PreviousNodeHash")
 		reqBody.PreviousNodeHash = "nil"
 	}
 
 	EntryHash := util.Sha256String(reqBody.Key + reqBody.Nonce)
-	fmt.Printf("[Debug] entry hash: %s\n", EntryHash)
-	fmt.Printf("\tprevious node hash: %s\n", reqBody.PreviousNodeHash)
-	fmt.Printf("\tprevious current node hash: %s\n", h.NodeInfo.NodeHash)
+	// fmt.Printf("[Debug] entry hash: %s\n", EntryHash)
+	// fmt.Printf("\tprevious node hash: %s\n", reqBody.PreviousNodeHash)
+	// fmt.Printf("\tprevious current node hash: %s\n", h.NodeInfo.NodeHash)
 
 	// We've reached the correct node -------------------------------------------
 	// Case 1: standard case
@@ -42,9 +42,9 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Not the correct node, keep searching -------------------------------------------
-	fmt.Printf("[Debug] continuing on the loop\n")
+	// fmt.Printf("[Debug] continuing on the loop\n")
 	for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
-		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
+		// fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Check the next descendant
 		requestEndpoint := fmt.Sprintf("/api")
@@ -76,6 +76,6 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Printf("[Error] all descendants have failed for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
+	fmt.Printf("[Error] all descendants have failed SetValue for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
 	w.WriteHeader(http.StatusInternalServerError)
 }

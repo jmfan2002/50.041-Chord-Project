@@ -14,16 +14,16 @@ type CycleHealthResponse struct {
 }
 
 func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[Debug] CycleHealthCheck called\n")
+	// fmt.Printf("[Debug] CycleHealthCheck called\n")
 
 	// Parse variables from url -------------------------------------------
 	StartNodeHash := mux.Vars(r)["StartNodeHash"]
-	fmt.Printf("[Debug] given StartNodeHash: %s\n", StartNodeHash)
-	fmt.Printf("[Debug] current node hash: %s\n", h.NodeInfo.NodeHash)
+	// fmt.Printf("[Debug] given StartNodeHash: %s\n", StartNodeHash)
+	// fmt.Printf("[Debug] current node hash: %s\n", h.NodeInfo.NodeHash)
 
 	// We've cycled back, return -------------------------------------------
 	if h.NodeInfo.NodeHash == StartNodeHash {
-		fmt.Printf("[Debug] cycle complete, we've reached the start node! \n")
+		// fmt.Printf("[Debug] cycle complete, we've reached the start node! \n")
 		util.WriteResponse(w, CycleHealthResponse{CycleSize: 0}, http.StatusOK)
 		return
 	}
@@ -32,9 +32,9 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Continue the cycle -------------------------------------------
-	fmt.Printf("[Debug] continuing on the loop\n")
+	// fmt.Printf("[Debug] continuing on the loop\n")
 	for i := 0; i < min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray)); i++ {
-		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
+		// fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Check the next descendant
 		requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s", StartNodeHash)
@@ -63,12 +63,12 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 			}
 
 			healthResp.CycleSize++
-			fmt.Printf("[Debug] received healthCheck response from child! nodes: %d\n", healthResp.CycleSize)
+			// fmt.Printf("[Debug] received healthCheck response from child! nodes: %d\n", healthResp.CycleSize)
 			util.WriteResponse(w, healthResp, http.StatusOK)
 			return
 		}
 	}
 
-	fmt.Printf("[Error] all descendants have failed for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
+	fmt.Printf("[Error] all descendants have failed GetValue for current NodeUrl |%s|\n", h.NodeInfo.NodeUrl)
 	w.WriteHeader(http.StatusInternalServerError)
 }

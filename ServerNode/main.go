@@ -55,7 +55,7 @@ func main() {
 	// for testing purposes, you can run nodes on localhost 2000, 3000, and 4000. Then, you can remove node 3000 and it will still be successful
 	handler.NodeInfo.NodeHash = util.Sha256String(fmt.Sprintf("http://%s:%d", BASE_URL, port)) // DEBUG: REMOVE WHEN DONE
 
-	fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
+	// fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
 
 	// expose endpoints
 	router.HandleFunc("/api/health", handler.HealthCheck).Methods("GET")
@@ -91,7 +91,7 @@ func main() {
 
 	fmt.Printf("Listening on port %d\n", port)
 	go func() {
-		fmt.Println("[Debug]")
+		// fmt.Println("[Debug]")
 		time.Sleep(1 * time.Second)
 		fmt.Println("Waking up, notifying entry point")
 		http.Post(fmt.Sprintf("http://%s", ENTRYPOINT)+"/join", "application/json",

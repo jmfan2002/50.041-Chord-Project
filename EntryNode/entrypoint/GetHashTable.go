@@ -20,8 +20,8 @@ type TableEntry struct {
 func (entryPoint *EntryPoint) GetHashTable(w http.ResponseWriter, r *http.Request) {
 	hashTable := []TableEntry{}
 
-	fmt.Println("Get hash table called")
-	fmt.Println("Getting hash table from", len(entryPoint.Servers), "nodes")
+	// fmt.Println("[Msg] Get hash table called")
+	// fmt.Println("Getting hash table from", len(handler.EntryPoint.servers), "nodes")
 
 	// Go through all nodes
 	for _, nodeURL := range entryPoint.Servers {

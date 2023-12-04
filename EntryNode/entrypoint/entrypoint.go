@@ -241,8 +241,9 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	predIndex := insertionPoint
 
 	for predIndex != (insertionPoint+1+numServers)%numServers {
+		fmt.Println("[DEBUG] looping")
 		predIndex = (predIndex - 1 + numServers) % numServers
-		fmt.Printf("trying to contact %s\n", entryPoint.Servers[entryPoint.IpHashes[predIndex].Text(16)])
+		// fmt.Printf("trying to contact %s\n", entryPoint.Servers[entryPoint.IpHashes[predIndex].Text(16)])
 		predIp := entryPoint.Servers[entryPoint.IpHashes[predIndex].Text(16)]
 
 		_, err := entryPoint.requester.SendRequest(predIp, "/api/successors/nil/0", http.MethodPatch, nil, util.REQUEST_TIMEOUT)

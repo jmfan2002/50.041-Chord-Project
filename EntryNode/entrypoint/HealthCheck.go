@@ -32,7 +32,7 @@ func (entryPoint *EntryPoint) HealthCheck(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	fmt.Printf("Request result: %s\n", resp.Status)
+	// fmt.Printf("Request result: %s\n", resp.Status)
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error reading server node response")

@@ -2,7 +2,6 @@ package entrypoint
 
 import (
 	"EntryNode/util"
-	"fmt"
 	"net/http"
 )
 
@@ -18,7 +17,7 @@ type SetValueResBody struct {
 func (entryPoint *EntryPoint) SetValue(w http.ResponseWriter, r *http.Request) {
 	// Get key and value from request
 	var reqBody SetValueReqBody
-	fmt.Println("Got data set")
+	// fmt.Println("Got data set")
 
 	util.ReadRequestBody(w, r, &reqBody)
 
