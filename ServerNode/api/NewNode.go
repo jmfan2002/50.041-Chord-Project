@@ -90,13 +90,34 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.NodeInfo.SuccessorArray =
-		append(
-			h.NodeInfo.SuccessorArray[:insertionPoint],
+	// Actually add the new node, but only if no duplicates found (handle temp faults)
+	nodeInList := false
+	nodeListIndex := 0
+	for i, x := range h.NodeInfo.SuccessorArray {
+		if x == reqBody.NewNode {
+			nodeInList = true
+			nodeListIndex = i
+			break
+		}
+	}
+
+	if !nodeInList {
+		h.NodeInfo.SuccessorArray =
 			append(
-				[]string{reqBody.NewNode}, h.NodeInfo.SuccessorArray[insertionPoint:]...,
-			)...,
-		)
+				h.NodeInfo.SuccessorArray[:insertionPoint],
+				append(
+					[]string{reqBody.NewNode}, h.NodeInfo.SuccessorArray[insertionPoint:]...,
+				)...,
+			)
+	} else {
+		// If a duplicate entry exists, we remove it from orig in case we want to
+		// set successors of the new node - this prevents self references in the successors array
+		origSuccArr =
+			append(
+				origSuccArr[:nodeListIndex],
+				origSuccArr[nodeListIndex+1:]...,
+			)
+	}
 
 	// Limit length of succ array
 	h.NodeInfo.SuccessorArray = h.NodeInfo.SuccessorArray[:min(h.NodeInfo.StoredNbrs, len(h.NodeInfo.SuccessorArray))]
