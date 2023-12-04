@@ -2,8 +2,12 @@ if [ -z "$1" ]; then
     echo "ERROR: Please pass number of servers"
     exit
 fi
+if [ -z "$2" ]; then
+    echo "ERROR: Please pass tolerance number"
+    exit
+fi
 
-TOLERANCE=1
+TOLERANCE=$2
 
 # set up docker compose string
 NUM_SERVERS=$1
@@ -11,7 +15,7 @@ SERVER_NODE_STR='
   server_nodeSERVER_NUM:
     build: ./ServerNode
     image: server_node
-    entrypoint: ["./ServerNode", "PORT_NUM", "TOLERANCE", "server_nodeSERVER_NUM"]
+    entrypoint: ["./ServerNode", "PORT_NUM", "TOLERANCE", "server_nodeSERVER_NUM", "entry_node:3000"]
     ports:
       - "PORT_NUM:PORT_NUM"
     deploy:

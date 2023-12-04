@@ -21,7 +21,7 @@ func main() {
 	// Parse arguments
 	usageStr := "usage: go run main.go <port> <storedNbrs> <baseURL> <entrypoint>"
 	if len(os.Args) < 5 {
-		fmt.Printf("[Error] port or storedNbrs or baseURL missing. %s\n", usageStr)
+		fmt.Printf("[Error] port or storedNbrs or baseURL or entrypoint missing. %s\n", usageStr)
 		os.Exit(0)
 	}
 	port, err := strconv.Atoi(os.Args[1])
