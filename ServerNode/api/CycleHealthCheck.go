@@ -17,9 +17,8 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[Debug] CycleHealthCheck called\n")
 
 	// Parse variables from url -------------------------------------------
-	PreviousNodeHash := mux.Vars(r)["PreviousNodeHash"]
 	StartNodeHash := mux.Vars(r)["StartNodeHash"]
-	fmt.Printf("[Debug] given PreviousNodeHash: %s, StartNodeHash: %s\n", PreviousNodeHash, StartNodeHash)
+	fmt.Printf("[Debug] given StartNodeHash: %s\n", StartNodeHash)
 	fmt.Printf("[Debug] current node hash: %s\n", h.NodeInfo.NodeHash)
 
 	// We've cycled back, return -------------------------------------------
@@ -38,7 +37,7 @@ func (h *Handler) CycleHealthCheck(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Check the next descendant
-		requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s/%s", h.NodeInfo.NodeHash, StartNodeHash)
+		requestEndpoint := fmt.Sprintf("/api/cycleHealth/%s", StartNodeHash)
 		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodGet, nil, constants.REQUEST_TIMEOUT)
 
 		if err != nil {

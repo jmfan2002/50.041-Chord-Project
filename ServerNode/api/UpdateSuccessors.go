@@ -15,7 +15,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[Debug] UpdateSuccessors called\n")
 
 	// Parse variables from url -------------------------------------------
-	PreviousNodeHash := mux.Vars(r)["PreviousNodeHash"]
+	StartingNodeHash := mux.Vars(r)["StartingNodeHash"]
 
 	CurrentOverlap, err := strconv.Atoi(mux.Vars(r)["CurrentOverlap"])
 	if err != nil {
@@ -37,9 +37,12 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// We've cycled back, start on overlap -------------------------------------------
-	if PreviousNodeHash != "nil" && CurrentOverlap == 0 && h.NodeInfo.NodeHash <= PreviousNodeHash {
+	if StartingNodeHash != "nil" && CurrentOverlap == 0 && h.NodeInfo.NodeHash == StartingNodeHash {
 		fmt.Printf("[Debug] cycle complete, starting on overlap \n")
 		CurrentOverlap++
+	}
+	if StartingNodeHash == "nil" {
+		StartingNodeHash = h.NodeInfo.NodeHash
 	}
 
 	if CurrentOverlap == 0 {
@@ -51,7 +54,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("[Debug] sending msg to %s\n", h.NodeInfo.SuccessorArray[i])
 
 		// Request next descendent
-		requestEndpoint := fmt.Sprintf("/api/successors/%s/%d", h.NodeInfo.NodeHash, CurrentOverlap)
+		requestEndpoint := fmt.Sprintf("/api/successors/%s/%d", StartingNodeHash, CurrentOverlap)
 		resp, err := h.Requester.SendRequest(h.NodeInfo.SuccessorArray[i], requestEndpoint, http.MethodPatch, nil, constants.REQUEST_TIMEOUT)
 
 		if err != nil {
