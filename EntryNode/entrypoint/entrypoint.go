@@ -193,8 +193,16 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	// Add server to internal tables
 	insertionPoint := util.BinarySearch(entryPoint.ipHashes, z)
 
+	nodeInList := false
+	for _, x := range entryPoint.ipHashes {
+		if entryPoint.servers[x.Text(16)] == ipAddress {
+			nodeInList = true
+			break
+		}
+	}
+
 	// ... actually, only if the entry doesn't already exists, though
-	if len(entryPoint.ipHashes) == 0 || entryPoint.ipHashes[(insertionPoint+len(entryPoint.ipHashes)-1)%len(entryPoint.ipHashes)].Cmp(z) != 0 {
+	if len(entryPoint.ipHashes) == 0 || !nodeInList {
 		if len(entryPoint.ipHashes) == insertionPoint {
 			entryPoint.ipHashes = append(entryPoint.ipHashes, *z)
 		} else {
@@ -243,6 +251,21 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 		predIndex = (predIndex - 1 + numServers) % numServers
 		fmt.Printf("trying to contact %s\n", entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)])
 		predIp := entryPoint.servers[entryPoint.ipHashes[predIndex].Text(16)]
+
+		req, err := http.NewRequest(
+			http.MethodPatch,
+			predIp+"/api/successors/nil/0",
+			bytes.NewBuffer([]byte{}),
+		)
+		req.Header.Set("Content-Type", "application/json")
+
+		// create HTTP client and execute request
+		client := &http.Client{}
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 
 		data, _ := json.Marshal(NewNodeReq{
 			predIp,
