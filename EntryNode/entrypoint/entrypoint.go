@@ -194,7 +194,7 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	insertionPoint := util.BinarySearch(entryPoint.ipHashes, z)
 
 	// ... actually, only if the entry doesn't already exists, though
-	if len(entryPoint.ipHashes) == 0 || entryPoint.ipHashes[(insertionPoint-1)%len(entryPoint.ipHashes)].Cmp(z) != 0 {
+	if len(entryPoint.ipHashes) == 0 || entryPoint.ipHashes[(insertionPoint+len(entryPoint.ipHashes)-1)%len(entryPoint.ipHashes)].Cmp(z) != 0 {
 		if len(entryPoint.ipHashes) == insertionPoint {
 			entryPoint.ipHashes = append(entryPoint.ipHashes, *z)
 		} else {
@@ -220,18 +220,20 @@ func (entryPoint *EntryPoint) addServer(ipAddress string) {
 	numServers := len(entryPoint.ipHashes)
 
 	// If first server, set successors list to self
-	if numServers == 1 {
-		data, _ := json.Marshal(Successors{
-			Successors: []string{ipAddress},
-		})
-		_, _ = http.Post(
-			ipAddress+"/api/successors",
-			"application/json",
-			bytes.NewBuffer(data),
-		)
+	/*
+		if numServers == 1 {
+			data, _ := json.Marshal(Successors{
+				Successors: []string{ipAddress},
+			})
+			_, _ = http.Post(
+				ipAddress+"/api/successors",
+				"application/json",
+				bytes.NewBuffer(data),
+			)
 
-		return
-	}
+			return
+		}
+	*/
 
 	// Node join
 	// Try to find the predecessor to the new node, and use it to inform the new node.
