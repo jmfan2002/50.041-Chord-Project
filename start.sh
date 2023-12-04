@@ -11,7 +11,7 @@ SERVER_NODE_STR='
   server_nodeSERVER_NUM:
     build: ./ServerNode
     image: server_node
-    entrypoint: ["./ServerNode", "PORT_NUM", "TOLERANCE", "server_nodeSERVER_NUM", "entry_node:3000"]
+    entrypoint: ["/bin/sh", "-c", "sleep SERVER_NUM && ./ServerNode PORT_NUM TOLERANCE server_nodeSERVER_NUM entry_node:3000"]
     ports:
       - "PORT_NUM:PORT_NUM"
     deploy:
