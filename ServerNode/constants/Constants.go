@@ -1,3 +1,3 @@
 package constants
 
-const REQUEST_TIMEOUT = 1000
+const REQUEST_TIMEOUT = 500
