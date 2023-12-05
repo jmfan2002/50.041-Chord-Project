@@ -140,22 +140,33 @@ func (entryPoint *EntryPoint) getKVP(key string) string {
 		go entryPoint.tryGetKVP(serverAddress, key, strconv.Itoa(i), in)
 	}
 
-	errors := make([]string, 0)
-	out := ""
-	for i := 0; i < entryPoint.ToleratedFaults; i += 1 {
-		next := <-in
-		if !next.isError {
-			out = next.data
-		} else {
-			errors = append(errors, next.data)
+	ostream := make(chan string)
+
+	go func() {
+		errors := make([]string, 0)
+		out := ""
+		flag := false
+
+		for i := 0; i < entryPoint.ToleratedFaults; i += 1 {
+			next := <-in
+			if !next.isError {
+				ostream <- next.data
+				flag = true
+			} else {
+				errors = append(errors, next.data)
+			}
 		}
-	}
 
-	for _, nonce := range errors {
-		entryPoint.trySetKVP(key, nonce, out)
-	}
+		if flag {
+			ostream <- ""
+		}
 
-	return out
+		for _, nonce := range errors {
+			entryPoint.trySetKVP(key, nonce, out)
+		}
+	}()
+
+	return <-ostream
 }
 
 // Returns the IP address of the node responsible for the given key
