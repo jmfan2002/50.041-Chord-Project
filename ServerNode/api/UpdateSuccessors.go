@@ -26,7 +26,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 
 	// We've fully overlapped, return -------------------------------------------
 	if CurrentOverlap == h.NodeInfo.StoredNbrs-1 {
-		fmt.Printf("[Debug] overlap complete, returning! \n")
+		// fmt.Printf("[Debug] overlap complete, returning! \n")
 		util.WriteResponse(w, structs.SuccessorsResponse{Successors: []string{h.NodeInfo.NodeUrl}}, http.StatusOK)
 		return
 	}
@@ -99,7 +99,7 @@ func (h *Handler) UpdateSuccessors(w http.ResponseWriter, r *http.Request) {
 				updateResp.Successors = updateResp.Successors[:h.NodeInfo.StoredNbrs-1]
 			}
 
-			fmt.Printf("[Debug] (Success!) returning successor array: %s\n", updateResp.Successors)
+			// fmt.Printf("[Debug] (Success!) returning successor array: %s\n", updateResp.Successors)
 			util.WriteResponse(w, updateResp, http.StatusOK)
 			return
 		}

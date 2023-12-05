@@ -44,7 +44,7 @@ func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
 	serverAddress := entryPoint.Lookup(key, nonce)
 	fmt.Printf("Sending %s -> %s to %s\n", key, val, serverAddress)
 
-	res, err := entryPoint.requester.SendRequest(
+	_, err := entryPoint.requester.SendRequest(
 		serverAddress,
 		"/api",
 		http.MethodPost,
@@ -70,7 +70,7 @@ func (entryPoint *EntryPoint) trySetKVP(key string, nonce string, val string) {
 		}
 		return
 	}
-	fmt.Printf("Request result: %s\n", res.Status)
+	// fmt.Printf("Request result: %s\n", res.Status)
 }
 
 func (entryPoint *EntryPoint) setKVP(key string, val string) {
@@ -285,7 +285,7 @@ func (EntryPoint *EntryPoint) WriteState() {
 		return
 	}
 
-	fmt.Println("Done writing backup for entrypoint.")
+	fmt.Println("Entrypoint successfully backed up to state.txt")
 }
 
 func ReadState() *EntryPoint {

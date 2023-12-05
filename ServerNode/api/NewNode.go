@@ -29,9 +29,9 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("NewNode called! Originally from %s, the new node is %s\n", reqBody.Origin, reqBody.NewNode)
+	// fmt.Printf("NewNode called! Originally from %s, the new node is %s\n", reqBody.Origin, reqBody.NewNode)
 	reqBody.Counter += 1
-	fmt.Printf("Current count %d\n", reqBody.Counter)
+	// fmt.Printf("Current count %d\n", reqBody.Counter)
 	// Determine if the message made a full loop, and stop if so.
 	// This is the case if the view list is non-empty, and we're the original target.
 	// (If we're the origin, we would've done all the work we needed
@@ -82,7 +82,7 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 			bytes.NewBuffer(data),
 		)
 		if err == nil {
-			fmt.Printf("Successfully passing on to %s\n", h.NodeInfo.SuccessorArray[0])
+			// fmt.Printf("Successfully passing on to %s\n", h.NodeInfo.SuccessorArray[0])
 			break
 		}
 		// If we don't get a response from our successor...
@@ -142,7 +142,6 @@ func (h *Handler) NewNode(w http.ResponseWriter, r *http.Request) {
 			origSuccArr = append(origSuccArr, h.NodeInfo.NodeUrl)
 		}
 
-		fmt.Println("[DEEBLEDOO] sending successors request")
 		_, err := h.Requester.SendRequest(reqBody.NewNode, "/api/successors", http.MethodPost, structs.SuccessorsResponse{Successors: origSuccArr}, constants.REQUEST_TIMEOUT)
 
 		// data, _ := json.Marshal(

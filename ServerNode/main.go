@@ -96,7 +96,7 @@ func main() {
 		fmt.Println("Waking up, notifying entry point")
 		http.Post(fmt.Sprintf("http://%s", ENTRYPOINT)+"/join", "application/json",
 			bytes.NewBuffer(j))
-		fmt.Printf("[Debug] set up node %s\n", handler.NodeInfo)
+		fmt.Printf("[Msg] set up node %s\n", handler.NodeInfo)
 	}()
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
 
