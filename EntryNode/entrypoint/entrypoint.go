@@ -149,7 +149,7 @@ func (entryPoint *EntryPoint) getKVP(key string) string {
 
 		for i := 0; i < entryPoint.ToleratedFaults; i += 1 {
 			next := <-in
-			if !next.isError {
+			if !next.isError && next.data != "" {
 				ostream <- next.data
 				flag = true
 			} else {
