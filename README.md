@@ -29,6 +29,6 @@ For communication between nodes, the entry node is available at `entry_node:3000
 
 ### Create a new server node:
 ```Bash
-./addNode.sh [NODE_NAME] [NODE_ID] [TOLERANCE]
+./addNode_[lf || crlf].sh [NODE_NAME] [NODE_ID] [TOLERANCE]
 ```
 Note that `NODE_ID` should be a number greater than the current number of nodes

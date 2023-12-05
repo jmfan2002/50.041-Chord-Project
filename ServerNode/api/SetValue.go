@@ -35,8 +35,9 @@ func (h *Handler) SetValue(w http.ResponseWriter, r *http.Request) {
 	// Case 1: standard case
 	// Case 2: current node has looped back around to 0 and entry belongs in the node with lowest hash
 	if h.NodeInfo.NodeHash >= EntryHash || h.NodeInfo.NodeHash < reqBody.PreviousNodeHash && EntryHash > reqBody.PreviousNodeHash {
-		fmt.Printf("[Debug] Node %s is the correct destination for hash %s, inserting \n", h.NodeInfo.NodeUrl, EntryHash)
-		h.NodeInfo.NodeContents[EntryHash] = structs.EntryResponse{Key: reqBody.Key, Value: reqBody.Value, Nonce: reqBody.Nonce}
+		insertedEntry := structs.EntryResponse{Key: reqBody.Key, Value: reqBody.Value, Nonce: reqBody.Nonce}
+		fmt.Printf("Node %s is the correct destination for entry %s, inserting \n", h.NodeInfo.NodeUrl, insertedEntry)
+		h.NodeInfo.NodeContents[EntryHash] = insertedEntry
 		util.WriteResponse(w, h.NodeInfo.NodeContents[EntryHash], http.StatusOK)
 		return
 	}
